@@ -1,0 +1,3 @@
+[submodule "Packages/CCU"]
+	path = Packages/CCU
+	url = https://github.com/Unity-Technologies/ConditionalCompilationUtility

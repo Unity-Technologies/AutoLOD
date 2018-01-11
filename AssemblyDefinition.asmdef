@@ -1,0 +1,9 @@
+{
+    "name": "AutoLOD",
+    "references": [],
+    "includePlatforms": [
+        "Editor",
+        "WindowsStandalone64"
+    ],
+    "excludePlatforms": []
+}

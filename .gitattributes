@@ -1,0 +1,124 @@
+## From https://gist.github.com/MattOstgard/046b122d7d14b6c10b7083c732efb93c w/ modifications
+
+# Set the default behavior, in case people don't have core.autocrlf set.
+* text=auto
+
+# Unity
+*.cginc   text
+*.cs      diff=csharp text eol=lf
+*.shader  text
+
+
+# Unity YAML
+*.anim               merge=unityyamlmerge eol=lf
+*.controller         merge=unityyamlmerge eol=lf
+*.mat                merge=unityyamlmerge eol=lf
+*.meta               merge=unityyamlmerge eol=lf
+*.physicMaterial     merge=unityyamlmerge eol=lf
+*.physicMaterial2D   merge=unityyamlmerge eol=lf
+*.prefab             merge=unityyamlmerge eol=lf
+*.unity              merge=unityyamlmerge eol=lf
+
+
+# Unity LFS
+*.lfs.*	        filter=lfs diff=lfs merge=lfs -crlf
+*.cubemap       filter=lfs diff=lfs merge=lfs -text
+*.unitypackage  filter=lfs diff=lfs merge=lfs -text
+
+
+# Image
+*.ai    filter=lfs diff=lfs merge=lfs -text
+*.apng  filter=lfs diff=lfs merge=lfs -text
+*.astc  filter=lfs diff=lfs merge=lfs -text
+*.bmp   filter=lfs diff=lfs merge=lfs -text
+*.dds   filter=lfs diff=lfs merge=lfs -text
+*.eps   filter=lfs diff=lfs merge=lfs -text
+*.exr   filter=lfs diff=lfs merge=lfs -text
+*.gif   filter=lfs diff=lfs merge=lfs -text
+*.hdr   filter=lfs diff=lfs merge=lfs -text
+*.jpeg  filter=lfs diff=lfs merge=lfs -text
+*.jpg   filter=lfs diff=lfs merge=lfs -text
+*.ktx   filter=lfs diff=lfs merge=lfs -text
+*.png   filter=lfs diff=lfs merge=lfs -text
+*.psd   filter=lfs diff=lfs merge=lfs -text
+*.pvr   filter=lfs diff=lfs merge=lfs -text
+*.svg   filter=lfs diff=lfs merge=lfs -text
+*.svgz  filter=lfs diff=lfs merge=lfs -text
+*.tga   filter=lfs diff=lfs merge=lfs -text
+*.tif   filter=lfs diff=lfs merge=lfs -text
+*.tiff  filter=lfs diff=lfs merge=lfs -text
+*.webm  filter=lfs diff=lfs merge=lfs -text
+*.webp  filter=lfs diff=lfs merge=lfs -text
+
+
+# Audio
+*.aif   filter=lfs diff=lfs merge=lfs -text
+*.m4a   filter=lfs diff=lfs merge=lfs -text
+*.mp3   filter=lfs diff=lfs merge=lfs -text
+*.ogg   filter=lfs diff=lfs merge=lfs -text
+*.wav   filter=lfs diff=lfs merge=lfs -text
+
+
+# Video
+*.asf   filter=lfs diff=lfs merge=lfs -text
+*.avi   filter=lfs diff=lfs merge=lfs -text
+*.flv   filter=lfs diff=lfs merge=lfs -text
+*.mov   filter=lfs diff=lfs merge=lfs -text
+*.mp4   filter=lfs diff=lfs merge=lfs -text
+*.mpeg  filter=lfs diff=lfs merge=lfs -text
+*.mpg   filter=lfs diff=lfs merge=lfs -text
+*.ogv   filter=lfs diff=lfs merge=lfs -text
+*.wmv   filter=lfs diff=lfs merge=lfs -text
+
+
+# 3D Object
+*.blend  filter=lfs diff=lfs merge=lfs -text
+*.dxf    filter=lfs diff=lfs merge=lfs -text
+*.fbx    filter=lfs diff=lfs merge=lfs -text
+*.lxo    filter=lfs diff=lfs merge=lfs -text
+*.ma     filter=lfs diff=lfs merge=lfs -text
+*.max    filter=lfs diff=lfs merge=lfs -text
+*.mb     filter=lfs diff=lfs merge=lfs -text
+*.obj    filter=lfs diff=lfs merge=lfs -text
+
+
+# Compressed Archive
+*.7z   filter=lfs diff=lfs merge=lfs -text
+*.bz2  filter=lfs diff=lfs merge=lfs -text
+*.gz   filter=lfs diff=lfs merge=lfs -text
+*.rar  filter=lfs diff=lfs merge=lfs -text
+*.tar  filter=lfs diff=lfs merge=lfs -text
+*.zip  filter=lfs diff=lfs merge=lfs -text
+
+
+# Compiled Dynamic Library
+*.dll  filter=lfs diff=lfs merge=lfs -text
+*.pdb  filter=lfs diff=lfs merge=lfs -text
+*.so   filter=lfs diff=lfs merge=lfs -text
+
+
+# Compiled Static Library
+*.a            filter=lfs diff=lfs merge=lfs -text
+*.la           filter=lfs diff=lfs merge=lfs -text
+*.lai          filter=lfs diff=lfs merge=lfs -text
+*.lib          filter=lfs diff=lfs merge=lfs -text
+*.llblgenproj  filter=lfs diff=lfs merge=lfs -text
+
+
+# Font
+*.otf  filter=lfs diff=lfs merge=lfs -text
+*.ttf  filter=lfs diff=lfs merge=lfs -text
+
+
+# Executable/Installer
+*.apk  filter=lfs diff=lfs merge=lfs -text
+*.exe  filter=lfs diff=lfs merge=lfs -text
+
+
+# Documents
+*.pdf  filter=lfs diff=lfs merge=lfs -text
+
+
+# Other
+*.reason  filter=lfs diff=lfs merge=lfs -text
+*.rns     filter=lfs diff=lfs merge=lfs -text
