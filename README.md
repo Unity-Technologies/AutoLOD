@@ -1,5 +1,5 @@
 # AutoLOD
-Automatic LOD generation + scene optimization - Initial release was on January 12, 2018 via [blogpost](https://blogs.unity3d.com/?p=60377)
+Automatic LOD generation + scene optimization - Initial release was on January 12, 2018 via [blogpost](https://blogs.unity3d.com/2018/01/12/unity-labs-autolod-experimenting-with-automatic-performance-improvements/)
 
 ## Experimental Status
 It’s important to note that AutoLOD is an experimental feature. As such, there is no formal support (e.g. FogBugz, support@unity3d.com, Premium Support, etc.) offered, so please do not use these channels. Instead, post your questions, comments, suggestions, and issues here on GitHub.
