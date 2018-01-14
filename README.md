@@ -48,3 +48,8 @@ If you plan on making changes to AutoLOD and/or contributing back, then you'll n
 
 ## License
 Unity Companion License (see [LICENSE](LICENSE))
+
+## Contributors
+[Amir Ebrahimi](https://github.com/amirebrahimi/)
+<br>[Elliot Cuzzillo](https://github.com/ecuzzillo)
+<br>[Yuangguang Liao](https://github.com/liaoyg)
