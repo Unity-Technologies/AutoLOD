@@ -25,6 +25,8 @@ namespace UnityEngine.Experimental.AutoLOD
             wm.tangents = mesh.tangents;
             wm.uv = mesh.uv;
             wm.uv2 = mesh.uv2;
+            wm.uv3 = mesh.uv3;
+            wm.uv4 = mesh.uv4;
             wm.colors = mesh.colors;
             wm.boneWeights = mesh.boneWeights;
             wm.bindposes = mesh.bindposes;
@@ -69,6 +71,8 @@ namespace UnityEngine.Experimental.AutoLOD
         public Vector4[] tangents { get; set; }
         public Vector2[] uv { get; set; }
         public Vector2[] uv2 { get; set; }
+        public Vector2[] uv3 { get; set; }
+        public Vector2[] uv4 { get; set; }
         public Color[] colors { get; set; }
 
         public Color32[] colors32
@@ -119,6 +123,8 @@ namespace UnityEngine.Experimental.AutoLOD
             mesh.tangents = tangents;
             mesh.uv = uv;
             mesh.uv2 = uv2;
+            mesh.uv3 = uv3;
+            mesh.uv4 = uv4;
             mesh.colors = colors;
             mesh.boneWeights = boneWeights;
             mesh.bindposes = bindposes;

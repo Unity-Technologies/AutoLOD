@@ -8,14 +8,6 @@ namespace UnityEditor.Experimental.AutoLOD
 {
     public class SimulatedMeshSimplifier : IMeshSimplifier
     {
-        public static Type batcherType { set; get; }
-
-        GameObject lodGO;
-
-        public LODVolume Volume { private get; set; }
-        public float Reduction { private get; set; }
-        public int LODlevels { private get; set; }
-
         public void Simplify(Mesh inputMesh, Mesh outputMesh, float quality)
         {
             Vector3[] vertices = inputMesh.vertices;

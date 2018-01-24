@@ -151,8 +151,6 @@ namespace UnityEditor.Experimental.AutoLOD
             ModelImporterLODGenerator.enabled = generateOnImport;
             ModelImporterLODGenerator.initialLODMaxPolyCount = initialLODMaxPolyCount;
 
-            SimulatedMeshSimplifier.batcherType = batcherType;
-
             if (sceneLODEnabled && !SceneLOD.activated)
             {
                 if (!SceneLOD.instance)
