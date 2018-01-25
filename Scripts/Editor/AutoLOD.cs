@@ -18,6 +18,7 @@ namespace UnityEditor.Experimental.AutoLOD
         const string k_MaxExecutionTime = "AutoLOD.MaxExecutionTime";
         const int k_DefaultMaxExecutionTime = 8;
         const string k_DefaultMeshSimplifier = "AutoLOD.DefaultMeshSimplifier";
+        const string k_DefaultMeshSimplifierDefault = "QuadricMeshSimplifier";
         const string k_DefaultBatcher = "AutoLOD.DefaultBatcher";
         const string k_MaxLOD = "AutoLOD.MaxLOD";
         const int k_DefaultMaxLOD = 2;
@@ -51,7 +52,7 @@ namespace UnityEditor.Experimental.AutoLOD
             get
             {
                 var meshSimplifiers = ObjectUtils.GetImplementationsOfInterface(typeof(IMeshSimplifier)).ToArray();
-                var type = Type.GetType(EditorPrefs.GetString(k_DefaultMeshSimplifier, null));
+                var type = Type.GetType(EditorPrefs.GetString(k_DefaultMeshSimplifier, k_DefaultMeshSimplifierDefault));
                 if (type == null && meshSimplifiers.Length > 0)
                     type = Type.GetType(meshSimplifiers[0].AssemblyQualifiedName);
                 return type;
