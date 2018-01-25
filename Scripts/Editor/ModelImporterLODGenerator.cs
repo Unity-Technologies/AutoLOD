@@ -335,6 +335,7 @@ namespace UnityEditor.Experimental.AutoLOD
 #else
                 var resultMesh = outputMesh;
 #endif
+                resultMesh.name = outMesh.name;
                 resultMesh.ApplyToMesh(outMesh);
                 outMesh.RecalculateBounds();
 
