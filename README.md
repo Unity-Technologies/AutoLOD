@@ -49,6 +49,9 @@ If you plan on making changes to AutoLOD and/or contributing back, then you'll n
 ## License
 Unity Companion License (see [LICENSE](LICENSE))
 
+## All contributions are subject to the [Unity Contribution Agreement (UCA)](https://unity3d.com/legal/licenses/Unity_Contribution_Agreement)
+By making a pull request, you are confirming agreement to the terms and conditions of the UCA, including that your Contributions are your original creation and that you have complete right and authority to make your Contributions.
+
 ## Contributors
 [Amir Ebrahimi](https://github.com/amirebrahimi/)
 <br>[Elliot Cuzzillo](https://github.com/ecuzzillo)
