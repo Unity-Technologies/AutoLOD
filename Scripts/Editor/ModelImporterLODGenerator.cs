@@ -239,17 +239,39 @@ namespace UnityEditor.Experimental.AutoLOD
                     maxLODFound++;
                 }
 
+                var importerRef = new SerializedObject(assetImporter);
+                var importerLODLevels = importerRef.FindProperty("m_LODScreenPercentages");
                 for (int i = 0; i <= maxLODFound; i++)
                 {
                     var lod = new LOD();
                     lod.renderers = lodData[i];
-                    lod.screenRelativeTransitionHeight = i == maxLODFound ? 0.01f : Mathf.Pow(0.5f, i + 1);
+                    var screenPercentage = i == maxLODFound ? 0.01f : Mathf.Pow(0.5f, i + 1);
+
+                    // Use the model importer percentages if they exist
+                    if (i < importerLODLevels.arraySize)
+                    {
+                        var element = importerLODLevels.GetArrayElementAtIndex(i);
+                        screenPercentage = element.floatValue;
+                    }
+
+                    lod.screenRelativeTransitionHeight = screenPercentage;
                     lods.Add(lod);
                 }
 
                 var lodGroup = go.AddComponent<LODGroup>();
                 lodGroup.SetLODs(lods.ToArray());
                 lodGroup.RecalculateBounds();
+
+                // Keep model importer in sync
+                importerLODLevels.ClearArray();
+                for (int i = 0; i < lods.Count; i++)
+                {
+                    var lod = lods[i];
+                    importerLODLevels.InsertArrayElementAtIndex(i);
+                    var element = importerLODLevels.GetArrayElementAtIndex(i);
+                    element.floatValue = lod.screenRelativeTransitionHeight;
+                }
+                importerRef.ApplyModifiedPropertiesWithoutUndo();
 
                 s_ModelAssetsProcessed.Add(assetPath);
             }
