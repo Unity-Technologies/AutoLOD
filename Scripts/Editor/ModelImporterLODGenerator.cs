@@ -94,11 +94,17 @@ namespace UnityEditor.Experimental.AutoLOD
                     importSettings.initialLODMaxPolyCount = initialLODMaxPolyCount;
                 }
 
-                if (importSettings.generateOnImport && importSettings.maxLODGenerated == 0 && polyCount <= importSettings.initialLODMaxPolyCount)
+                // It's possible to override defaults to either generate on import or to not generate and use specified
+                // LODs in the override, but in the case where we are not overriding and globally we are not generating
+                // on import, then there should be no further processing.
+                if (!overrideDefaults && !enabled)
                     return;
 
-                if (!overrideDefaults || importSettings.generateOnImport)
+                if (importSettings.generateOnImport)
                 {
+                    if (importSettings.maxLODGenerated == 0 && polyCount <= importSettings.initialLODMaxPolyCount)
+                        return;
+
                     var simplifierType = Type.GetType(importSettings.meshSimplifier) ?? meshSimplifierType;
 
                     if (polyCount > importSettings.initialLODMaxPolyCount)
