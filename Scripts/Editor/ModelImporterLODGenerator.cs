@@ -27,11 +27,12 @@ namespace UnityEditor.Experimental.AutoLOD
             public Mesh inputMesh;
             public Mesh outputMesh;
             public float quality;
+            public Type meshSimplifierType;
         }
 
         void OnPostprocessModel(GameObject go)
         {
-            if (enabled && !go.GetComponentInChildren<LODGroup>() && meshSimplifierType != null)
+            if (!go.GetComponentInChildren<LODGroup>() && meshSimplifierType != null)
             {
                 if (go.GetComponentsInChildren<SkinnedMeshRenderer>().Any())
                 {
@@ -87,7 +88,7 @@ namespace UnityEditor.Experimental.AutoLOD
 
                 if (!overrideDefaults)
                 {
-                    importSettings.generateOnImport = true;
+                    importSettings.generateOnImport = enabled;
                     importSettings.meshSimplifier = meshSimplifierType.AssemblyQualifiedName;
                     importSettings.maxLODGenerated = maxLOD;
                     importSettings.initialLODMaxPolyCount = initialLODMaxPolyCount;
@@ -98,6 +99,8 @@ namespace UnityEditor.Experimental.AutoLOD
 
                 if (!overrideDefaults || importSettings.generateOnImport)
                 {
+                    var simplifierType = Type.GetType(importSettings.meshSimplifier) ?? meshSimplifierType;
+
                     if (polyCount > importSettings.initialLODMaxPolyCount)
                     {
                         foreach (var mf in originalMeshFilters)
@@ -113,6 +116,7 @@ namespace UnityEditor.Experimental.AutoLOD
                             meshLOD.inputMesh = inputMesh;
                             meshLOD.outputMesh = outputMesh;
                             meshLOD.quality = (float)importSettings.initialLODMaxPolyCount / (float)polyCount;
+                            meshLOD.meshSimplifierType = simplifierType;
                             meshLODs.Add(meshLOD);
 
                             preprocessMeshes.Add(outputMesh.GetInstanceID());
@@ -158,6 +162,7 @@ namespace UnityEditor.Experimental.AutoLOD
                             meshLOD.inputMesh = inputMesh;
                             meshLOD.outputMesh = outputMesh;
                             meshLOD.quality = Mathf.Pow(0.5f, i);
+                            meshLOD.meshSimplifierType = simplifierType;
                             meshLODs.Add(meshLOD);
                         }
 
@@ -321,7 +326,7 @@ namespace UnityEditor.Experimental.AutoLOD
             if (!preprocessMeshes.Contains(inputMeshID))
                 inputMesh = meshLOD.inputMesh.ToWorkingMesh();
 
-            var meshSimplifier = (IMeshSimplifier)Activator.CreateInstance(meshSimplifierType);
+            var meshSimplifier = (IMeshSimplifier)Activator.CreateInstance(meshLOD.meshSimplifierType);
 #if !SINGLE_THREADED
             var worker = new BackgroundWorker();
             worker.DoWork += (sender, args) =>
