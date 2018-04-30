@@ -132,6 +132,7 @@ namespace UnityEditor.Experimental.AutoLOD
                                 k_DefaultHideFlags, typeof(MeshFilter), typeof(MeshRenderer)).transform;
                             lodTransform.parent = mf.transform;
                             lodTransform.localPosition = Vector3.zero;
+                            lodTransform.localRotation = Quaternion.identity;
 
                             var lodMF = lodTransform.GetComponent<MeshFilter>();
                             var lodRenderer = lodTransform.GetComponent<MeshRenderer>();
