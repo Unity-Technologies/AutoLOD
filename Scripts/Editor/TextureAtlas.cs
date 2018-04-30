@@ -2,7 +2,7 @@
 
 namespace UnityEditor.Experimental.AutoLOD
 {
-    [CreateAssetMenu]
+    [CreateAssetMenu(fileName = "TextureAtlas", menuName = "AutoLOD/Texture Atlas")]
     public class TextureAtlas : ScriptableObject
     {
         public Texture2D textureAtlas;

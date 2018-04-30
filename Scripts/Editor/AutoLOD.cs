@@ -176,31 +176,6 @@ namespace UnityEditor.Experimental.AutoLOD
 #endif
         }
 
-        [MenuItem("GameObject/AutoLOD/Generate LODs", validate = true, priority = 11)]
-        static bool GenerateLODsValidate()
-        {
-            bool enabled = true;
-
-            // Allow processing of whole directories
-            var activeObject = Selection.activeObject;
-            if (IsDirectoryAsset(activeObject))
-                return true;
-
-            var gameObjects = Selection.gameObjects;
-            if (gameObjects.Length == 0)
-                return false;
-
-            foreach (var go in gameObjects)
-            {
-                enabled = !HasLODChain(go);
-
-                if (!enabled)
-                    break;
-            }
-
-            return enabled;
-        }
-
         static bool HasLODChain(GameObject go)
         {
             var lodGroup = go.GetComponent<LODGroup>();
@@ -252,7 +227,7 @@ namespace UnityEditor.Experimental.AutoLOD
             }
         }
 
-        [MenuItem("GameObject/AutoLOD/Generate LODs", priority = 11)]
+        [MenuItem("GameObject/AutoLOD/Generate LODs (Prefabs and Scene GameObjects)", priority = 11)]
         static void GenerateLODs(MenuCommand menuCommand)
         {
             MonoBehaviourHelper.StartCoroutine(GenerateLODsCoroutine(menuCommand));
@@ -287,6 +262,71 @@ namespace UnityEditor.Experimental.AutoLOD
             if (folderAsset)
                 Selection.activeObject = folderAsset;
         }
+
+        [MenuItem("GameObject/AutoLOD/Generate LODs (Prefabs and Scene GameObjects)", validate = true, priority = 11)]
+        static bool CanGenerateLODs()
+        {
+            bool enabled = true;
+
+            // Allow processing of whole directories
+            var activeObject = Selection.activeObject;
+            if (IsDirectoryAsset(activeObject))
+                return true;
+
+            var gameObjects = Selection.gameObjects;
+            if (gameObjects.Length == 0)
+                return false;
+
+            foreach (var go in gameObjects)
+            {
+                enabled = !HasLODChain(go);
+
+                if (!enabled)
+                    break;
+            }
+
+            return enabled;
+        }
+
+        [MenuItem("Assets/AutoLOD/Generate LOD", false)]
+        static void ForceGenerateLOD()
+        {
+            var selection = Selection.activeGameObject;
+            if (selection)
+            {
+                var prefabType = PrefabUtility.GetPrefabType(selection);
+                if (prefabType == PrefabType.ModelPrefab)
+                {
+                    var assetPath = AssetDatabase.GetAssetPath(selection);
+
+                    if (!ModelImporterLODGenerator.enabled)
+                    {
+                        // If AutoLOD's generate on import is disabled for the whole project, then generate LODs for this model specifically
+                        var lodData = ModelImporterLODGenerator.GetLODData(assetPath);
+                        lodData.overrideDefaults = true;
+                        lodData.importSettings.generateOnImport = true;
+
+                        var lodPath = ModelImporterLODGenerator.GetLODDataPath(assetPath);
+                        AssetDatabase.CreateAsset(lodData, lodPath);
+                    }
+
+                    AssetDatabase.ImportAsset(assetPath);
+                }
+                else if (prefabType == PrefabType.Prefab)
+                {
+                    GenerateLODs(new MenuCommand(null));
+                }
+            }
+        }
+
+        [MenuItem("Assets/AutoLOD/Generate LOD", true)]
+        static bool CanForceGenerateLOD()
+        {
+            var selection = Selection.activeGameObject;
+            var prefabType = selection ? PrefabUtility.GetPrefabType(selection) : PrefabType.None;
+            return selection &&  prefabType == PrefabType.ModelPrefab || prefabType == PrefabType.Prefab;
+        }
+
 
         [MenuItem("GameObject/AutoLOD/Remove LODs", validate = true, priority = 11)]
         static bool RemoveLODsValidate()

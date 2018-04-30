@@ -2,7 +2,6 @@
 
 namespace UnityEditor.Experimental.AutoLOD
 {
-    [CreateAssetMenu]
     public class LODData : ScriptableObject
     {
         public const int MaxLOD = 7;

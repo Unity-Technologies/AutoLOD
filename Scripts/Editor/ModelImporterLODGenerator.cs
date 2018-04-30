@@ -73,26 +73,9 @@ namespace UnityEditor.Experimental.AutoLOD
                 var meshLODs = new List<MeshLOD>();
                 var preprocessMeshes = new HashSet<int>();
 
-                var lodData = AssetDatabase.LoadAssetAtPath<LODData>(GetLODDataPath(assetPath));
-                if (!lodData)
-                    lodData = ScriptableObject.CreateInstance<LODData>();
-
+                var lodData = GetLODData(assetPath);
                 var overrideDefaults = lodData.overrideDefaults;
-
                 var importSettings = lodData.importSettings;
-                if (importSettings == null)
-                {
-                    importSettings = new LODImportSettings();
-                    lodData.importSettings = importSettings;
-                }
-
-                if (!overrideDefaults)
-                {
-                    importSettings.generateOnImport = enabled;
-                    importSettings.meshSimplifier = meshSimplifierType.AssemblyQualifiedName;
-                    importSettings.maxLODGenerated = maxLOD;
-                    importSettings.initialLODMaxPolyCount = initialLODMaxPolyCount;
-                }
 
                 // It's possible to override defaults to either generate on import or to not generate and use specified
                 // LODs in the override, but in the case where we are not overriding and globally we are not generating
@@ -316,10 +299,36 @@ namespace UnityEditor.Experimental.AutoLOD
                 AssetDatabase.SaveAssets();
         }
 
-        static string GetLODDataPath(string assetPath)
+        internal static string GetLODDataPath(string assetPath)
         {
             var pathPrefix = Path.GetDirectoryName(assetPath) + Path.DirectorySeparatorChar + Path.GetFileNameWithoutExtension(assetPath);
             return pathPrefix + "_lods.asset";
+        }
+
+        internal static LODData GetLODData(string assetPath)
+        {
+            var lodData = AssetDatabase.LoadAssetAtPath<LODData>(GetLODDataPath(assetPath));
+            if (!lodData)
+                lodData = ScriptableObject.CreateInstance<LODData>();
+
+            var overrideDefaults = lodData.overrideDefaults;
+
+            var importSettings = lodData.importSettings;
+            if (importSettings == null)
+            {
+                importSettings = new LODImportSettings();
+                lodData.importSettings = importSettings;
+            }
+
+            if (!overrideDefaults)
+            {
+                importSettings.generateOnImport = enabled;
+                importSettings.meshSimplifier = meshSimplifierType.AssemblyQualifiedName;
+                importSettings.maxLODGenerated = maxLOD;
+                importSettings.initialLODMaxPolyCount = initialLODMaxPolyCount;
+            }
+
+            return lodData;
         }
 
         static void GenerateMeshLOD(MeshLOD meshLOD, HashSet<int> preprocessMeshes)
