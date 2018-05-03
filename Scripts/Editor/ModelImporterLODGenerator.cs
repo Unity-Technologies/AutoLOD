@@ -243,7 +243,7 @@ namespace UnityEditor.Experimental.AutoLOD
                     var screenPercentage = i == maxLODFound ? 0.01f : Mathf.Pow(0.5f, i + 1);
 
                     // Use the model importer percentages if they exist
-                    if (i < importerLODLevels.arraySize)
+                    if (i < importerLODLevels.arraySize && maxLODFound == importerLODLevels.arraySize)
                     {
                         var element = importerLODLevels.GetArrayElementAtIndex(i);
                         screenPercentage = element.floatValue;
@@ -251,6 +251,11 @@ namespace UnityEditor.Experimental.AutoLOD
 
                     lod.screenRelativeTransitionHeight = screenPercentage;
                     lods.Add(lod);
+                }
+
+                if (importerLODLevels.arraySize != 0 && maxLODFound != importerLODLevels.arraySize)
+                {
+                    Debug.LogWarning("The model has the own lod group but it will not be used because the specified lod count in settings is different.");
                 }
 
                 var lodGroup = go.AddComponent<LODGroup>();
