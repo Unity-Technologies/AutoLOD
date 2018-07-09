@@ -1,9 +1,10 @@
 {
     "name": "AutoLOD",
     "references": [],
+    "optionalUnityReferences": [],
     "includePlatforms": [
-        "Editor",
-        "WindowsStandalone64"
+        "Editor"
     ],
-    "excludePlatforms": []
+    "excludePlatforms": [],
+    "allowUnsafeCode": false
 }

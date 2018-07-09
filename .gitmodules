@@ -1,6 +1,6 @@
 [submodule "Packages/CCU"]
 	path = Packages/CCU
-	url = https://github.com/Unity-Technologies/ConditionalCompilationUtility.git
+	url = git@github.com:Unity-Technologies/ConditionalCompilationUtility.git 
 [submodule "Packages/UnityMeshSimplifier"]
 	path = Packages/UnityMeshSimplifier
-	url = https://github.com/Unity-Technologies/UnityMeshSimplifier
+	url = git@github.com:Unity-Technologies/UnityMeshSimplifier.git 

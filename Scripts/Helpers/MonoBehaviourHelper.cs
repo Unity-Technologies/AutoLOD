@@ -8,9 +8,12 @@ using UnityEngine.Experimental.AutoLOD;
 
 namespace UnityEditor.Experimental.AutoLOD
 {
-    // Useful for launching co-routines in the Editor or executing someting on the main thread
+    // Useful for launching co-routines in the Editor or executing something on the main thread
     [InitializeOnLoad]
-    public class MonoBehaviourHelper : ScriptableSingleton<MonoBehaviourHelper>
+    public class MonoBehaviourHelper
+#if UNITY_EDITOR
+        : ScriptableSingleton<MonoBehaviourHelper>
+#endif
     {
         partial class Surrogate : MonoBehaviour { }
 
@@ -22,7 +25,11 @@ namespace UnityEditor.Experimental.AutoLOD
             {
                 if (!m_MonoBehaviour)
                 {
+#if UNITY_EDITOR
                     var go = EditorUtility.CreateGameObjectWithHideFlags("MonoBehaviourHelper", HideFlags.DontSave, typeof(Surrogate));
+#else
+                    var go = new GameObject("MonoBehaviourHelper", typeof(Surrogate));
+#endif
                     m_MonoBehaviour = go.GetComponent<Surrogate>();
                     m_MonoBehaviour.runInEditMode = true;
                 }
@@ -105,16 +112,27 @@ namespace UnityEditor.Experimental.AutoLOD
 
         void OnEnable()
         {
+#if UNITY_EDITOR
             EditorApplication.update += EditorUpdate;
+#endif
         }
 
         void OnDisable()
         {
+#if UNITY_EDITOR
             EditorApplication.update -= EditorUpdate;
+#endif
 
             if (m_MonoBehaviour)
                 DestroyImmediate(m_MonoBehaviour.gameObject);
         }
+
+#if !UNITY_EDITOR
+        void Update()
+        {
+            EditorUpdate();
+        }
+#endif
 
         static void EditorUpdate()
         {
@@ -137,8 +155,10 @@ namespace UnityEditor.Experimental.AutoLOD
                     }
                 }
 
+#if UNITY_EDITOR
                 // this is necessary to cause our GameObject co-routines to tick at a stable frequency
                 EditorApplication.QueuePlayerLoopUpdate();
+#endif
             }
         }
 
