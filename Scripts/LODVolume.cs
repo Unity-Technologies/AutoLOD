@@ -488,11 +488,13 @@ public class LODVolume : MonoBehaviour
         }
     }
 
+#if UNITY_EDITOR
     void OnDrawGizmosSelected()
     {
         if (Selection.activeGameObject == gameObject)
             DrawGizmos(1f, Color.magenta);
     }
+#endif
 
     void DrawGizmos(float alpha, Color color)
     {
@@ -501,6 +503,7 @@ public class LODVolume : MonoBehaviour
         Gizmos.DrawWireCube(bounds.center, bounds.size);
     }
 
+#if UNITY_EDITOR
     [ContextMenu("GenerateHLOD")]
     void GenerateHLODContext()
     {
@@ -693,6 +696,7 @@ public class LODVolume : MonoBehaviour
                 yield return parentLODVolume.GenerateHLOD();
         }
     }
+#endif
 
     void CleanupHLOD()
     {
@@ -707,6 +711,7 @@ public class LODVolume : MonoBehaviour
         }
     }
 
+#if UNITY_EDITOR
     [ContextMenu("GenerateLODs")]
     void GenerateLODsContext()
     {
@@ -800,7 +805,7 @@ public class LODVolume : MonoBehaviour
             lodGroup.RecalculateBounds();
             lodGroup.ForceLOD(-1);
 
-            var prefab = PrefabUtility.GetPrefabParent(go);
+            var prefab = PrefabUtility.GetCorrespondingObjectFromSource(go);
             if (prefab)
             {
                 var assetPath = AssetDatabase.GetAssetPath(prefab);
@@ -810,6 +815,7 @@ public class LODVolume : MonoBehaviour
             }
         }
     }
+#endif
 
     public static int GetDepth(Transform transform)
     {

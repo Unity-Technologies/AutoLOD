@@ -516,7 +516,11 @@ namespace UnityEditor.Experimental.AutoLOD
                 lodGroup.RecalculateBounds();
                 lodGroup.ForceLOD(-1);
 
+#if UNITY_2018_2_OR_NEWER
+                var prefab = PrefabUtility.GetCorrespondingObjectFromSource(go);
+#else
                 var prefab = PrefabUtility.GetPrefabParent(go);
+#endif
                 if (prefab)
                 {
                     var lodsAssetPath = GetLODAssetPath(prefab);
@@ -563,7 +567,11 @@ namespace UnityEditor.Experimental.AutoLOD
                     UnityObject.DestroyImmediate(mf.gameObject);
             }
 
+#if UNITY_2018_2_OR_NEWER
+            var prefab = PrefabUtility.GetCorrespondingObjectFromSource(go);
+#else
             var prefab = PrefabUtility.GetPrefabParent(go);
+#endif
             if (prefab)
             {
                 var lodAssetPath = GetLODAssetPath(prefab);

@@ -302,6 +302,7 @@ namespace UnityEditor.Experimental.AutoLOD.Utilities
 				.FirstOrDefault(x => x.Name.Equals(name) && typeof(UnityObject).IsAssignableFrom(x));
 		}
 
+#if UNITY_EDITOR
 		public static IEnumerator GetAssetPreview(UnityObject obj, Action<Texture> callback)
 		{
 			var texture = AssetPreview.GetAssetPreview(obj);
@@ -323,6 +324,7 @@ namespace UnityEditor.Experimental.AutoLOD.Utilities
 	        var method = typeof(AssetDatabase).GetMethod("CreateAssetFromObjects", BindingFlags.NonPublic | BindingFlags.Static);
 	        method.Invoke(null, new object[] { objects, path });
 	    }
+#endif
 
 	    public static IEnumerator FindObjectsOfType<T>(List<T> objects) where T : Component
 	    {

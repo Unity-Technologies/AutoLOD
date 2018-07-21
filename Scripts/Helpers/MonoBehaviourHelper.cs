@@ -9,11 +9,35 @@ using UnityEngine.Experimental.AutoLOD;
 namespace UnityEditor.Experimental.AutoLOD
 {
     // Useful for launching co-routines in the Editor or executing something on the main thread
-    [InitializeOnLoad]
-    public class MonoBehaviourHelper
 #if UNITY_EDITOR
-        : ScriptableSingleton<MonoBehaviourHelper>
+    [InitializeOnLoad]
+#else
+    public class ScriptableSingleton<T> : ScriptableObject where T : ScriptableObject
+    {
+        static T s_Instance;
+
+        public ScriptableSingleton()
+        {
+            if (s_Instance != null)
+                Debug.LogError((object) "ScriptableSingleton already exists. Did you query the singleton in a constructor?");
+            else
+                s_Instance = this as T;
+        }
+
+        public static T instance
+        {
+            get
+            {
+                if (s_Instance == null)
+                    CreateInstance<T>().hideFlags = HideFlags.HideAndDontSave;
+
+                return s_Instance;
+            }
+        }
+    }
 #endif
+
+    public class MonoBehaviourHelper : ScriptableSingleton<MonoBehaviourHelper>
     {
         partial class Surrogate : MonoBehaviour { }
 
@@ -31,7 +55,9 @@ namespace UnityEditor.Experimental.AutoLOD
                     var go = new GameObject("MonoBehaviourHelper", typeof(Surrogate));
 #endif
                     m_MonoBehaviour = go.GetComponent<Surrogate>();
+#if UNITY_EDITOR
                     m_MonoBehaviour.runInEditMode = true;
+#endif
                 }
 
                 return m_MonoBehaviour;
