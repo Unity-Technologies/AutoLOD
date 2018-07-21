@@ -23,7 +23,7 @@ Experimental means this:
 - [MonoBehaviourHelper](Scripts/Helpers/MonoBehaviourHelper.cs) - a way to run coroutines in the editor + main thread execution from worker threads
 - [LODGroupExtensions](Scripts/Extensions/LODGroupExtensions.cs) - useful extension methods (e.g. GetCurrentLOD)
 - [TimedEnumerator](Scripts/Helpers/TimedEnumerator.cs) -  a way to control maximum execution time of coroutines
-- [TextureAtlasModules](Scripts/Editor/TextureAtlasModule.cs) - automatically generate texture atlases
+- [TextureAtlasModule](Scripts/Editor/TextureAtlasModule.cs) - automatically generate texture atlases
 - [WorkingMesh](Scripts/Helpers/WorkingMesh.cs) - a thread-safe mesh class
 
 ## Evaluating
