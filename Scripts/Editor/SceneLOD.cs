@@ -436,6 +436,11 @@ namespace UnityEditor.Experimental.AutoLOD
         // PreCull is called before LODGroup updates
         void PreCull(Camera camera)
         {
+
+            //if playing in editor, not use this flow.
+            if (Application.isPlaying == true)
+                return;
+            
             if (!m_RootVolume)
                 return;
 

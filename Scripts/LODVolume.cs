@@ -616,7 +616,10 @@ public class LODVolume : MonoBehaviour
         });
 
         if (!hlodRootContainer)
+        {
             hlodRootContainer = new GameObject(k_HLODRootContainer);
+            hlodRootContainer.AddComponent<SceneLODUpdater>();
+        }
 
         var hlodLayer = LayerMask.NameToLayer(HLODLayer);
 
