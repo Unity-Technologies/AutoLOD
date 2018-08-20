@@ -116,13 +116,13 @@
         static float GetRelativeHeight(this LODGroup lodGroup, Camera camera)
         {
             var distance = (lodGroup.transform.TransformPoint(lodGroup.localReferencePoint) - camera.transform.position).magnitude;
-            return DistanceToRelativeHeight(camera, distance, lodGroup.GetWorldSpaceSize());
+            return DistanceToRelativeHeight(camera, distance, lodGroup.GetWorldSpaceSize()) * QualitySettings.lodBias;
         }
 
         static float GetRelativeHeight(this LODVolume.LODGroupHelper lodGroupHelper, Camera camera, Vector3 cameraPosition)
         {
             var distance = (lodGroupHelper.referencePoint - cameraPosition).magnitude;
-            return DistanceToRelativeHeight(camera, distance, lodGroupHelper.worldSpaceSize);
+            return DistanceToRelativeHeight(camera, distance, lodGroupHelper.worldSpaceSize) * QualitySettings.lodBias;
         }
     }
 }
