@@ -65,6 +65,11 @@ namespace UnityEditor.Experimental.AutoLOD
                     
                     var sharedMaterials = new Material[mesh.subMeshCount];
 
+                    if (Directory.Exists(materialPath) == false)
+                    {
+                        Directory.CreateDirectory(materialPath);
+                    }
+
                     //For submesh, we should create material asset.
                     //otherwise, simplygon will be combine uv of submesh.
                     for (int i = 0; i < mesh.subMeshCount; i++)
@@ -72,7 +77,7 @@ namespace UnityEditor.Experimental.AutoLOD
                         var material = new Material(Shader.Find("Standard"));
                         material.name = "Material " + i.ToString();
 
-                        AssetDatabase.CreateAsset(material, materialPath);
+                        AssetDatabase.CreateAsset(material, materialPath + "/" + material.name);
 
                         sharedMaterials[i] = material;
                     }
