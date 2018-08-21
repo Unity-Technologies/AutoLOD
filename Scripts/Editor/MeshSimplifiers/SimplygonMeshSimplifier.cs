@@ -22,6 +22,9 @@ namespace UnityEditor.Experimental.AutoLOD
     {
         static object executionLock = new object();
 
+        private const string lodPath = "Assets/LODs/";
+        private const string materialPath = lodPath + "Materials";
+
         public void Simplify(WorkingMesh inputMesh, WorkingMesh outputMesh, float quality)
         {
             var isMainThread = MonoBehaviourHelper.IsMainThread();
@@ -59,10 +62,21 @@ namespace UnityEditor.Experimental.AutoLOD
                     inputMesh.ApplyToMesh(mesh);
                     mf.sharedMesh = mesh;
                     renderer = go.GetComponent<MeshRenderer>();
-                    var material = new Material(Shader.Find("Standard"));
+                    
                     var sharedMaterials = new Material[mesh.subMeshCount];
+
+                    //For submesh, we should create material asset.
+                    //otherwise, simplygon will be combine uv of submesh.
                     for (int i = 0; i < mesh.subMeshCount; i++)
+                    {
+                        var material = new Material(Shader.Find("Standard"));
+                        material.name = "Material " + i.ToString();
+
+                        AssetDatabase.CreateAsset(material, materialPath);
+
                         sharedMaterials[i] = material;
+                    }
+
                     renderer.sharedMaterials = sharedMaterials;
                     renderer.enabled = false;
 
@@ -121,13 +135,14 @@ namespace UnityEditor.Experimental.AutoLOD
                 var jobCustomData = jobCustomDataProperty.GetValue(job.CloudJob, null);
                 var jobFolderName = pendingFolderNameProperty.GetValue(jobCustomData, null) as string;
             
-                var lodAssetDir = "Assets/LODs/" + job.AssetDirectory;
+                var lodAssetDir = lodPath + job.AssetDirectory;
                 var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(string.Format("{0}/{1}_LOD1.prefab", lodAssetDir, jobName));
                 mesh.ApplyToWorkingMesh(outputMesh);
 
                 //job.CloudJob.StateHandler.RequestJobDeletion();
                 AssetDatabaseEx.DeletePendingLODFolder(jobFolderName);
                 AssetDatabase.DeleteAsset(lodAssetDir);
+                AssetDatabase.DeleteAsset(materialPath);
 
                 UnityObject.DestroyImmediate(renderer.gameObject);
             });
