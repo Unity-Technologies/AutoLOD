@@ -182,6 +182,11 @@ public class LODVolume : MonoBehaviour
         }
     }
 
+    void Start()
+    {
+        lodGroup.SetEnabled(false);
+    }
+
     public static LODVolume Create()
     {
         GameObject go = new GameObject(k_DefaultName + s_VolumesCreated++, typeof(LODVolume));
@@ -611,7 +616,10 @@ public class LODVolume : MonoBehaviour
         });
 
         if (!hlodRootContainer)
+        {
             hlodRootContainer = new GameObject(k_HLODRootContainer);
+            hlodRootContainer.AddComponent<SceneLODUpdater>();
+        }
 
         var hlodLayer = LayerMask.NameToLayer(HLODLayer);
 
@@ -673,6 +681,10 @@ public class LODVolume : MonoBehaviour
             }
         }
         LOD lod = new LOD();
+        LOD detailLOD = new LOD();
+
+        detailLOD.screenRelativeTransitionHeight = 0.3f;
+        lod.screenRelativeTransitionHeight = 0.0f;
         
         var lodGroup = GetComponent<LODGroup>();
         if (!lodGroup)
@@ -686,7 +698,7 @@ public class LODVolume : MonoBehaviour
         }
 
         lod.renderers = hlodRoot.GetComponentsInChildren<Renderer>(false);
-        lodGroup.SetLODs(new LOD[] { lod });
+        lodGroup.SetLODs(new LOD[] { detailLOD, lod });
 
         if (propagateUpwards)
         {
@@ -839,5 +851,97 @@ public class LODVolume : MonoBehaviour
     {
         // Use this approach if we are not going to split meshes and simply put the object in one volume or another
         return Mathf.Approximately(bounds.size.magnitude, 0f) || bounds.Contains(r.bounds.center);
+    }
+
+    public void UpdateLODGroup(Camera camera, Vector3 cameraPosition, bool parentUsed)
+    {
+        //if lodgroup is not exists, there is no mesh.
+        if (lodGroup == null || lodGroup.lodGroup == null)
+        {
+            return;
+        }
+
+        //if parent already visibled, don't need to visible to children.
+        if (parentUsed == true)
+        {
+            lodGroup.SetEnabled(false);
+
+            if (childVolumes.Count == 0)
+            {
+                foreach (var renderer in renderers)
+                {
+                    renderer.enabled = false;
+
+                    var childLODGroup = renderer.GetComponentInParent<LODGroup>();
+                    if (childLODGroup)
+                        childLODGroup.SetEnabled(false);
+                }
+            }
+            else
+            {
+                foreach (var childVolume in childVolumes)
+                {
+                    childVolume.UpdateLODGroup(camera, cameraPosition, true);
+                }
+            }
+
+            return;
+        }
+
+        int currentLod = lodGroup.GetCurrentLOD(camera, cameraPosition);
+        bool groupEnabled = lodGroup.lodGroup.enabled;
+
+
+        if (currentLod == 0)
+        {
+            lodGroup.SetEnabled(false);
+
+            //leaf node have to used mesh own.
+            if (childVolumes.Count == 0)
+            {
+                foreach (var renderer in renderers)
+                {
+                    renderer.enabled = true;
+
+                    var childLODGroup = renderer.GetComponentInParent<LODGroup>();
+                    if (childLODGroup)
+                        childLODGroup.SetEnabled(true);
+                }
+            }
+            else
+            {
+                foreach (var childVolume in childVolumes)
+                {
+                    childVolume.UpdateLODGroup(camera, cameraPosition, false);
+                }
+            }
+
+
+        }
+        else if ( currentLod == 1 )
+        {
+            lodGroup.SetEnabled(true);
+
+            //leaf node have to used mesh own.
+            if (childVolumes.Count == 0)
+            {
+                foreach (var renderer in renderers)
+                {
+                    renderer.enabled = false;
+
+                    var childLODGroup = renderer.GetComponentInParent<LODGroup>();
+                    if (childLODGroup)
+                        childLODGroup.SetEnabled(false);
+                }
+            }
+            else
+            {
+                foreach (var childVolume in childVolumes)
+                {
+                    childVolume.UpdateLODGroup(camera, cameraPosition, true);
+                }
+            }
+
+        }
     }
 }
