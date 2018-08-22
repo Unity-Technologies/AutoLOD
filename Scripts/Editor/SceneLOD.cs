@@ -16,6 +16,10 @@ namespace UnityEditor.Experimental.AutoLOD
 {
     public class SceneLOD : ScriptableSingleton<SceneLOD>
     {
+        private const string k_GenerateSceneLODMenuPath = "AutoLOD/Generate SceneLOD";
+        private const string k_DestroySceneLODMenuPath = "AutoLOD/Destroy SceneLOD";
+        private const string k_UpdateSceneLODMenuPath = "AutoLOD/Update SceneLOD";
+        private const string k_ShowVolumeBoundsMenuPath = "AutoLOD/Show Volume Bounds";
         class SceneLODAssetProcessor : AssetModificationProcessor
         {
             public static string[] OnWillSaveAssets(string[] paths)
@@ -132,6 +136,8 @@ namespace UnityEditor.Experimental.AutoLOD
 #endif
             if (m_RootVolume != null)
                 m_RootVolume.ResetLODGroup();
+
+            Menu.SetChecked(k_ShowVolumeBoundsMenuPath, Settings.ShowVolumeBounds);
         }
 
         void OnDisable()
@@ -146,7 +152,6 @@ namespace UnityEditor.Experimental.AutoLOD
         void AddCallbacks()
         {
             EditorApplication.update += EditorUpdate;
-            EditorApplication.hierarchyWindowChanged += OnHierarchyChanged;
             Selection.selectionChanged += OnSelectionChanged;
             Camera.onPreCull += PreCull;
             SceneView.onSceneGUIDelegate += OnSceneGUI;
@@ -155,16 +160,9 @@ namespace UnityEditor.Experimental.AutoLOD
         void RemoveCallbacks()
         {
             EditorApplication.update -= EditorUpdate;
-            EditorApplication.hierarchyWindowChanged -= OnHierarchyChanged;
             Selection.selectionChanged -= OnSelectionChanged;
             Camera.onPreCull -= PreCull;
             SceneView.onSceneGUIDelegate -= OnSceneGUI;
-        }
-
-        void OnHierarchyChanged()
-        {
-            m_SceneDirty = true;
-            m_ExcludedRenderers.Clear();
         }
 
         void OnSelectionChanged()
@@ -207,12 +205,6 @@ namespace UnityEditor.Experimental.AutoLOD
 
                 if ( m_RootVolume != null )
                     m_RootVolume.ResetLODGroup();
-            }
-            else if (!m_RootVolume && m_CreateRootVolumeForScene != activeSceneName && GUILayout.Button("Activate SceneLOD"))
-            {
-                m_CreateRootVolumeForScene = activeSceneName;
-                m_SceneDirty = true;
-                m_LastCamera = null;
             }
 
             GUILayout.FlexibleSpace();
@@ -461,5 +453,69 @@ namespace UnityEditor.Experimental.AutoLOD
 
             m_RootVolume.UpdateLODGroup(camera, cameraPosition, false);
         }
+
+#region Menu
+        //AutoLOD requires Unity 2017.3 or a later version
+#if UNITY_2017_3_OR_NEWER
+        [MenuItem(k_GenerateSceneLODMenuPath, true, priority = 1)]
+        static bool CanGenerateSceneLOD(MenuCommand menuCommand)
+        {
+            return instance.m_RootVolume == null;
+        }
+
+        [MenuItem(k_GenerateSceneLODMenuPath, priority = 1)]
+        static void GenerateSceneLOD(MenuCommand menuCommand)
+        {
+            instance.m_CreateRootVolumeForScene = SceneManager.GetActiveScene().name;
+            instance.m_SceneDirty = true;
+            instance.m_LastCamera = null;
+        }
+
+
+        [MenuItem(k_DestroySceneLODMenuPath, true, priority = 1)]
+        static bool CanDestroySceneLOD(MenuCommand menuCommand)
+        {
+            return instance.m_RootVolume != null;
+        }
+
+        [MenuItem(k_DestroySceneLODMenuPath, priority = 1)]
+        static void DestroySceneLOD(MenuCommand menuCommand)
+        {
+            MonoBehaviourHelper.StartCoroutine(ObjectUtils.FindGameObject("HLODs",
+                root => { DestroyImmediate(root); }));
+            DestroyImmediate(instance.m_RootVolume.gameObject);
+            instance.m_SceneDirty = false;
+        }
+
+        [MenuItem(k_UpdateSceneLODMenuPath, true, priority = 1)]
+        static bool CanUpdateSceneLOD(MenuCommand menuCommand)
+        {
+            return instance.m_RootVolume != null;
+        }
+
+        [MenuItem(k_UpdateSceneLODMenuPath, priority = 1)]
+        static void UpdateSceneLOD(MenuCommand menuCommand)
+        {
+            DestroySceneLOD(menuCommand);
+            GenerateSceneLOD(menuCommand);
+        }
+
+        [MenuItem(k_ShowVolumeBoundsMenuPath, priority = 50)]
+        static void ShowVolumeBounds(MenuCommand menuCommand)
+        {
+            bool showVolume = !Settings.ShowVolumeBounds;
+            Menu.SetChecked(k_ShowVolumeBoundsMenuPath, showVolume);
+
+            LODVolume.drawBounds = showVolume;
+            Settings.ShowVolumeBounds = showVolume;
+
+            // Force more frequent updating
+            var mouseOverWindow = EditorWindow.mouseOverWindow;
+            if (mouseOverWindow)
+                mouseOverWindow.Repaint();
+
+        }
+#endif
+#endregion
     }
 }

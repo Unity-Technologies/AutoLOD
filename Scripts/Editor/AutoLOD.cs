@@ -25,8 +25,6 @@ namespace UnityEditor.Experimental.AutoLOD
         const string k_GenerateOnImport = "AutoLOD.GenerateOnImport";
         const string k_InitialLODMaxPolyCount = "AutoLOD.InitialLODMaxPolyCount";
         const int k_DefaultInitialLODMaxPolyCount = 500000;
-        const string k_SceneLODEnabled = "AutoLOD.SceneLODEnabled";
-        const string k_ShowVolumeBounds = "AutoLOD.ShowVolumeBounds";
 
         static int maxExecutionTime
         {
@@ -110,27 +108,6 @@ namespace UnityEditor.Experimental.AutoLOD
             get { return EditorPrefs.GetInt(k_InitialLODMaxPolyCount, k_DefaultInitialLODMaxPolyCount); }
         }
 
-        static bool sceneLODEnabled
-        {
-            set
-            {
-                EditorPrefs.SetBool(k_SceneLODEnabled, value);
-                UpdateDependencies();
-            }
-            get { return EditorPrefs.GetBool(k_SceneLODEnabled, true); }
-        }
-
-        static bool showVolumeBounds
-        {
-            set
-            {
-                EditorPrefs.SetBool(k_ShowVolumeBounds, value);
-                UpdateDependencies();
-            }
-            get { return EditorPrefs.GetBool(k_ShowVolumeBounds, false); }
-        }
-
-
         static SceneLOD m_SceneLOD;
 
         static void UpdateDependencies()
@@ -145,23 +122,11 @@ namespace UnityEditor.Experimental.AutoLOD
 
             LODVolume.meshSimplifierType = meshSimplifierType;
             LODVolume.batcherType = batcherType;
-            LODVolume.drawBounds = sceneLODEnabled && showVolumeBounds;
 
             ModelImporterLODGenerator.meshSimplifierType = meshSimplifierType;
             ModelImporterLODGenerator.maxLOD = maxLOD;
             ModelImporterLODGenerator.enabled = generateOnImport;
             ModelImporterLODGenerator.initialLODMaxPolyCount = initialLODMaxPolyCount;
-
-            if (sceneLODEnabled && !SceneLOD.activated)
-            {
-                if (!SceneLOD.instance)
-                    Debug.Log("SceneLOD failed to start");
-            }
-            else if (!sceneLODEnabled && SceneLOD.activated)
-            {
-                Debug.Log("Destroying SceneLOD instance");
-                UnityObject.DestroyImmediate(SceneLOD.instance);
-            }
 #else
             ModelImporterLODGenerator.enabled = false;
 #endif
@@ -667,33 +632,6 @@ namespace UnityEditor.Experimental.AutoLOD
                 var generateLODsOnImport = EditorGUILayout.Toggle("Generate on Import", generateOnImport);
                 if (EditorGUI.EndChangeCheck())
                     generateOnImport = generateLODsOnImport;
-            }
-
-            // Use SceneLOD?
-            {
-                EditorGUI.BeginChangeCheck();
-                var enabled = EditorGUILayout.Toggle("Scene LOD", sceneLODEnabled);
-                if (EditorGUI.EndChangeCheck())
-                    sceneLODEnabled = enabled;
-
-                if (sceneLODEnabled)
-                {
-                    EditorGUI.indentLevel++;
-                    EditorGUI.BeginChangeCheck();
-                    var showBounds = EditorGUILayout.Toggle("Show Volume Bounds", showVolumeBounds);
-                    if (EditorGUI.EndChangeCheck())
-                        showVolumeBounds = showBounds;
-
-                    var sceneLOD = SceneLOD.instance;
-                    EditorGUILayout.HelpBox(string.Format("Coroutine Queue: {0}\nCurrent Execution Time: {1:0.00} s", sceneLOD.coroutineQueueRemaining, sceneLOD.coroutineCurrentExecutionTime * 0.001f), MessageType.None);
-
-                    // Force more frequent updating
-                    var mouseOverWindow = EditorWindow.mouseOverWindow;
-                    if (mouseOverWindow)
-                        mouseOverWindow.Repaint();
-
-                    EditorGUI.indentLevel--;
-                }
             }
 #else
             EditorGUILayout.HelpBox("AutoLOD requires Unity 2017.3 or a later version", MessageType.Warning);
