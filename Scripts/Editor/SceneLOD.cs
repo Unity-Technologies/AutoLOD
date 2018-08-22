@@ -20,69 +20,6 @@ namespace UnityEditor.Experimental.AutoLOD
         private const string k_DestroySceneLODMenuPath = "AutoLOD/Destroy SceneLOD";
         private const string k_UpdateSceneLODMenuPath = "AutoLOD/Update SceneLOD";
         private const string k_ShowVolumeBoundsMenuPath = "AutoLOD/Show Volume Bounds";
-        class SceneLODAssetProcessor : AssetModificationProcessor
-        {
-            public static string[] OnWillSaveAssets(string[] paths)
-            {
-                foreach (string path in paths)
-                {
-                    if (path.Contains(".unity"))
-                    {
-                        AssetDatabase.StartAssetEditing();
-
-                        var scene = SceneManager.GetSceneByPath(path);
-                        var rootGameObjects = scene.GetRootGameObjects();
-                        foreach (var go in rootGameObjects)
-                        {
-                            var lodVolume = go.GetComponent<LODVolume>();
-                            if (lodVolume)
-                                PersistHLODs(lodVolume, path);
-                        }
-
-                        AssetDatabase.StopAssetEditing();
-                    }
-                }
- 
-                return paths;
-            }
-
-            static void PersistHLODs(LODVolume lodVolume, string scenePath)
-            {
-                var hlodRoot = lodVolume.hlodRoot;
-                if (hlodRoot)
-                {
-                    var mf = hlodRoot.GetComponent<MeshFilter>();
-                    var sharedMesh= mf.sharedMesh;
-                    if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(sharedMesh)))
-                    {
-                        SaveUniqueHLODAsset(sharedMesh, scenePath);
-                    }
-                }
-
-                foreach (Transform child in lodVolume.transform)
-                {
-                    var childLODVolume = child.GetComponent<LODVolume>();
-                    if (childLODVolume)
-                        PersistHLODs(childLODVolume, scenePath);
-                }
-            }
-
-            static void SaveUniqueHLODAsset(UnityObject asset, string scenePath)
-            {
-                if (!string.IsNullOrEmpty(scenePath))
-                {
-                    var directory = Path.GetDirectoryName(scenePath) + "/" + Path.GetFileNameWithoutExtension(scenePath) + "_HLOD/";
-                    if (!Directory.Exists(directory))
-                        Directory.CreateDirectory(directory);
-
-                    var path = directory + Path.GetRandomFileName();
-                    path = Path.ChangeExtension(path, "asset");
-                    AssetDatabase.CreateAsset(asset, path);
-                }
-            }
-        }
-
-        public static bool activated { get { return s_Activated; } }
 
         public int coroutineQueueRemaining { get { return m_CoroutineQueue.Count; }}
         public long coroutineCurrentExecutionTime { get { return m_ServiceCoroutineExecutionTime.ElapsedMilliseconds; }}
@@ -92,16 +29,12 @@ namespace UnityEditor.Experimental.AutoLOD
         
         string m_CreateRootVolumeForScene = "Default"; // Set to some value, so new scenes don't auto-create
         LODVolume m_RootVolume;
-        GameObject[] m_SelectedObjects;
-        Dictionary<GameObject, Pose> m_SelectedObjectLastPose = new Dictionary<GameObject, Pose>();
         Queue<IEnumerator> m_CoroutineQueue = new Queue<IEnumerator>();
         Coroutine m_ServiceCoroutineQueue;
         bool m_SceneDirty;
         Stopwatch m_ServiceCoroutineExecutionTime = new Stopwatch();
         Camera m_LastCamera;
         HashSet<Renderer> m_ExcludedRenderers = new HashSet<Renderer>();
-        Vector3 m_LastCameraPosition;
-        Quaternion m_LastCameraRotation;
 
         // Local method variable caching
         List<Renderer> m_FoundRenderers = new List<Renderer>();
@@ -152,7 +85,6 @@ namespace UnityEditor.Experimental.AutoLOD
         void AddCallbacks()
         {
             EditorApplication.update += EditorUpdate;
-            Selection.selectionChanged += OnSelectionChanged;
             Camera.onPreCull += PreCull;
             SceneView.onSceneGUIDelegate += OnSceneGUI;
         }
@@ -160,31 +92,8 @@ namespace UnityEditor.Experimental.AutoLOD
         void RemoveCallbacks()
         {
             EditorApplication.update -= EditorUpdate;
-            Selection.selectionChanged -= OnSelectionChanged;
             Camera.onPreCull -= PreCull;
             SceneView.onSceneGUIDelegate -= OnSceneGUI;
-        }
-
-        void OnSelectionChanged()
-        {
-            if (!m_RootVolume)
-                return;
-
-            if (m_SelectedObjects != null)
-                m_CoroutineQueue.Enqueue(UpdateOctreeBounds(m_SelectedObjects));
-
-            m_SelectedObjects = Selection.gameObjects;
-            if (m_SelectedObjects != null)
-            {
-                foreach (var selected in m_SelectedObjects)
-                {
-                    if (selected)
-                    {
-                        var selectedTransform = selected.transform;
-                        m_SelectedObjectLastPose[selected] = new Pose(selectedTransform.position, selectedTransform.rotation);
-                    }
-                }
-            }
         }
 
         void OnSceneGUI(SceneView sceneView)
@@ -211,53 +120,6 @@ namespace UnityEditor.Experimental.AutoLOD
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
             Handles.EndGUI();
-        }
-
-        IEnumerator UpdateOctreeBounds(GameObject[] gameObjects)
-        {
-            foreach (var go in gameObjects)
-            {
-                if (!go)
-                    continue;
-
-                Pose pose;
-                if (m_SelectedObjectLastPose.TryGetValue(go, out pose))
-                {
-                    var goTransform = go.transform;
-                    if (pose.position == goTransform.position && pose.rotation == goTransform.rotation)
-                        continue;
-                }
-
-                yield return UpdateChangedRenderer(go);
-            }
-        }
-
-        IEnumerator UpdateChangedRenderer(GameObject go)
-        {
-            if (!go)
-                yield break;
-
-            while (!m_RootVolume)
-                yield return UpdateOctree();
-
-            var transform = go.transform;
-            var renderer = go.GetComponent<Renderer>();
-            if (renderer)
-            {
-                if (transform.hasChanged && m_RootVolume.renderers.Contains(renderer))
-                {
-                    yield return m_RootVolume.UpdateRenderer(renderer);
-                    yield return SetRootLODVolume(); // In case the BVH has grown or shrunk
-                    transform.hasChanged = false;
-                }
-            }
-
-            foreach (Transform child in transform)
-            {
-                yield return UpdateChangedRenderer(child.gameObject);
-                if (!transform)
-                    yield break;
-            }
         }
 
         IEnumerator UpdateOctree()
