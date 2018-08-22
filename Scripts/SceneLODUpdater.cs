@@ -33,11 +33,21 @@ namespace UnityEngine.Experimental.AutoLOD
         void OnEnable()
         {
             Camera.onPreCull += OnPreCull;
+            if (m_RootLODVolume != null)
+            {
+                m_RootLODVolume.ResetLODGroup();
+            }
+
         }
 
         void OnDisable()
         {
             Camera.onPreCull -= OnPreCull;
+            if (m_RootLODVolume != null)
+            {
+                m_RootLODVolume.ResetLODGroup();
+            }
+
         }
 
         private void OnPreCull(Camera cam)
