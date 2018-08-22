@@ -14,89 +14,10 @@ using UnityEngine.Rendering;
 [RequiresLayer(HLODLayer)]
 public class LODVolume : MonoBehaviour
 {
-    [Serializable]
-    public class LODGroupHelper
-    {
-        public LODGroup lodGroup
-        {
-            get { return m_LODGroup; }
-            set
-            {
-                m_LODGroup = value;
-                m_LODs = null;
-            }
-        }
-        public LOD[] lods
-        {
-            get
-            {
-                if (m_LODs == null && m_LODGroup)
-                    m_LODs = m_LODGroup.GetLODs();
-
-                return m_LODs;
-            }
-        }
-        public Vector3 referencePoint
-        {
-            get
-            {
-                if (!m_ReferencePoint.HasValue)
-                    m_ReferencePoint = m_LODGroup ? m_LODGroup.transform.TransformPoint(m_LODGroup.localReferencePoint) : Vector3.zero;
-
-                return m_ReferencePoint.Value;
-            }
-        }
-        public float worldSpaceSize
-        {
-            get
-            {
-                if (!m_WorldSpaceSize.HasValue && m_LODGroup)
-                    m_WorldSpaceSize = m_LODGroup.GetWorldSpaceSize();
-
-                return m_WorldSpaceSize ?? 0f;
-            }
-
-        }
-
-        public int maxLOD
-        {
-            get
-            {
-                if (!m_MaxLOD.HasValue)
-                    m_MaxLOD = lodGroup.GetMaxLOD();
-
-                return m_MaxLOD.Value;
-            }
-        }
-
-        [SerializeField]
-        LODGroup m_LODGroup;
-
-        //Transform m_Transform;
-        LOD[] m_LODs;
-        Vector3? m_ReferencePoint;
-        float? m_WorldSpaceSize;
-        int? m_MaxLOD;
-    }
-
     public const string HLODLayer = "HLOD";
     public static Type meshSimplifierType { set; get; }
     public static Type batcherType { set; get; }
     public static bool drawBounds { set; get; }
-
-    public LODGroupHelper lodGroup
-    {
-        get
-        {
-            if (m_LODGroupHelper == null)
-            {
-                m_LODGroupHelper = new LODGroupHelper();
-                m_LODGroupHelper.lodGroup = GetComponent<LODGroup>();
-            }
-
-            return m_LODGroupHelper;
-        }
-    }
 
     public bool dirty;
     public Bounds bounds;
@@ -104,29 +25,6 @@ public class LODVolume : MonoBehaviour
     public List<Renderer> renderers = new List<Renderer>();
     public List<LODVolume> childVolumes = new List<LODVolume>();
 
-    public List<object> cached
-    {
-        get
-        {
-            if (m_Cached.Count == 0)
-            {
-                foreach (var r in renderers)
-                {
-                    var lg = r.GetComponentInParent<LODGroup>();
-                    if (lg)
-                    {
-                        var lgh = new LODGroupHelper();
-                        lgh.lodGroup = lg;
-                        m_Cached.Add(lgh);
-                    }
-                    else
-                        m_Cached.Add(r);
-                }
-            }
-
-            return m_Cached;
-        }
-    }
 
     const HideFlags k_DefaultHideFlags = HideFlags.None;
     const ushort k_VolumeSplitRendererCount = 32;//ushort.MaxValue;
@@ -136,10 +34,12 @@ public class LODVolume : MonoBehaviour
 
     static int s_VolumesCreated;
 
-    LODGroupHelper m_LODGroupHelper;
+    
     List<object> m_Cached = new List<object>();
 
     IMeshSimplifier m_MeshSimplifier;
+
+    private LODGroup m_LodGroup;
 
     static readonly Color[] k_DepthColors = new Color[]
     {
@@ -154,6 +54,7 @@ public class LODVolume : MonoBehaviour
 
     void Awake()
     {
+        /*
         if (Application.isPlaying)
         {
             // Prime helper object properties on start to avoid hitches later
@@ -179,7 +80,14 @@ public class LODVolume : MonoBehaviour
                     var primeWorldSize = lgh.worldSpaceSize;
                 }
             }
-        }
+        }*/
+    }
+
+    void Start()
+    {
+        m_LodGroup = GetComponent<LODGroup>();
+        if ( m_LodGroup != null )
+            m_LodGroup.SetEnabled(false);
     }
 
     public static LODVolume Create()
@@ -460,8 +368,6 @@ public class LODVolume : MonoBehaviour
                 childVolumes.Add(cv);
         }
 
-        cached.Clear();
-
         var lodVolumeParent = transform.parent;
         var parentLODVolume = lodVolumeParent ? lodVolumeParent.GetComponentInParent<LODVolume>() : null;
         if (parentLODVolume)
@@ -611,7 +517,10 @@ public class LODVolume : MonoBehaviour
         });
 
         if (!hlodRootContainer)
+        {
             hlodRootContainer = new GameObject(k_HLODRootContainer);
+            hlodRootContainer.AddComponent<SceneLODUpdater>();
+        }
 
         var hlodLayer = LayerMask.NameToLayer(HLODLayer);
 
@@ -673,11 +582,16 @@ public class LODVolume : MonoBehaviour
             }
         }
         LOD lod = new LOD();
+        LOD detailLOD = new LOD();
+
+        detailLOD.screenRelativeTransitionHeight = 0.3f;
+        lod.screenRelativeTransitionHeight = 0.0f;
         
         var lodGroup = GetComponent<LODGroup>();
         if (!lodGroup)
             lodGroup = gameObject.AddComponent<LODGroup>();
-        this.lodGroup.lodGroup = lodGroup;
+
+        m_LodGroup = lodGroup;
 
         if (!mergeChildrenVolumes)
         {
@@ -686,7 +600,7 @@ public class LODVolume : MonoBehaviour
         }
 
         lod.renderers = hlodRoot.GetComponentsInChildren<Renderer>(false);
-        lodGroup.SetLODs(new LOD[] { lod });
+        lodGroup.SetLODs(new LOD[] { detailLOD, lod });
 
         if (propagateUpwards)
         {
@@ -839,5 +753,150 @@ public class LODVolume : MonoBehaviour
     {
         // Use this approach if we are not going to split meshes and simply put the object in one volume or another
         return Mathf.Approximately(bounds.size.magnitude, 0f) || bounds.Contains(r.bounds.center);
+    }
+
+    //Disable all LODVolumes and enable on all meshes.
+    //UpdateLODGroup will be makes currect.
+    public void ResetLODGroup()
+    {
+        if (m_LodGroup == null)
+        {
+            m_LodGroup = GetComponent<LODGroup>();
+        }
+
+        if (m_LodGroup == null)
+        {
+            return;
+        }
+
+        m_LodGroup.SetEnabled(false);
+
+        if (hlodRoot != null)
+        {
+            var meshRenderer = hlodRoot.GetComponent<MeshRenderer>();
+            if (meshRenderer != null)
+            {
+                meshRenderer.enabled = false;
+            }
+        }
+
+        //if this is leaf, all renderer should be turn on.
+        if (childVolumes.Count == 0)
+        {
+            foreach (var renderer in renderers)
+            {
+                renderer.enabled = true;
+
+                var childLODGroup = renderer.GetComponentInParent<LODGroup>();
+                if (childLODGroup)
+                    childLODGroup.SetEnabled(true);
+            }
+        }
+
+        foreach (var child in childVolumes)
+        {
+            child.ResetLODGroup();
+        }
+    }
+    public void UpdateLODGroup(Camera camera, Vector3 cameraPosition, bool parentUsed)
+    {
+        if (m_LodGroup == null)
+        {
+            m_LodGroup = GetComponent<LODGroup>();
+        }
+
+        //if lodgroup is not exists, there is no mesh.
+        if (m_LodGroup == null)
+        {
+            return;
+        }
+
+
+        //if parent already visibled, don't need to visible to children.
+        if (parentUsed == true)
+        {
+            m_LodGroup.SetEnabled(false);
+
+            if (childVolumes.Count == 0)
+            {
+                foreach (var renderer in renderers)
+                {
+                    renderer.enabled = false;
+
+                    //Debug.Log(renderer.gameObject.name + " disabled");
+
+                    var childLODGroup = renderer.GetComponentInParent<LODGroup>();
+                    if (childLODGroup)
+                        childLODGroup.SetEnabled(false);
+                }
+            }
+            else
+            {
+                foreach (var childVolume in childVolumes)
+                {
+                    childVolume.UpdateLODGroup(camera, cameraPosition, true);
+                }
+            }
+
+            return;
+        }
+
+        int currentLod = m_LodGroup.GetCurrentLOD(camera);
+        bool groupEnabled = m_LodGroup.enabled;
+
+
+        if (currentLod == 0)
+        {
+            m_LodGroup.SetEnabled(false);
+
+            //leaf node have to used mesh own.
+            if (childVolumes.Count == 0)
+            {
+                foreach (var renderer in renderers)
+                {
+                    renderer.enabled = true;
+
+                    //Debug.Log(renderer.gameObject.name + " enabled");
+
+                    var childLODGroup = renderer.GetComponentInParent<LODGroup>();
+                    if (childLODGroup)
+                        childLODGroup.SetEnabled(true);
+                }
+            }
+            else
+            {
+                foreach (var childVolume in childVolumes)
+                {
+                    childVolume.UpdateLODGroup(camera, cameraPosition, false);
+                }
+            }
+
+
+        }
+        else if ( currentLod == 1 )
+        {
+            m_LodGroup.SetEnabled(true);
+
+            //leaf node have to used mesh own.
+            if (childVolumes.Count == 0)
+            {
+                foreach (var renderer in renderers)
+                {
+                    renderer.enabled = false;
+
+                    var childLODGroup = renderer.GetComponentInParent<LODGroup>();
+                    if (childLODGroup)
+                        childLODGroup.SetEnabled(false);
+                }
+            }
+            else
+            {
+                foreach (var childVolume in childVolumes)
+                {
+                    childVolume.UpdateLODGroup(camera, cameraPosition, true);
+                }
+            }
+
+        }
     }
 }

@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.Experimental.AutoLOD;
 using UnityEngine.SceneManagement;
 using Dbg = UnityEngine.Debug;
+using Debug = System.Diagnostics.Debug;
 using UnityObject = UnityEngine.Object;
 
 
@@ -129,12 +130,17 @@ namespace UnityEditor.Experimental.AutoLOD
 
             m_ServiceCoroutineQueue = null;
 #endif
+            if (m_RootVolume != null)
+                m_RootVolume.ResetLODGroup();
         }
 
         void OnDisable()
         {
             s_Activated = false;
             RemoveCallbacks();
+
+            if (m_RootVolume != null)
+                m_RootVolume.ResetLODGroup();
         }
 
         void AddCallbacks()
@@ -198,6 +204,9 @@ namespace UnityEditor.Experimental.AutoLOD
             {
                 s_HLODEnabled = !s_HLODEnabled;
                 m_LastCamera = null;
+
+                if ( m_RootVolume != null )
+                    m_RootVolume.ResetLODGroup();
             }
             else if (!m_RootVolume && m_CreateRootVolumeForScene != activeSceneName && GUILayout.Button("Activate SceneLOD"))
             {
@@ -436,120 +445,21 @@ namespace UnityEditor.Experimental.AutoLOD
         // PreCull is called before LODGroup updates
         void PreCull(Camera camera)
         {
+
+            //if playing in editor, not use this flow.
+            if (Application.isPlaying == true)
+                return;
+
+            if (s_HLODEnabled == false)
+                return;
+            
             if (!m_RootVolume)
                 return;
 
-            var cameraType = camera.cameraType;
             var cameraTransform = camera.transform;
             var cameraPosition = cameraTransform.position;
-            var cameraRotation = cameraTransform.rotation;
 
-            if (((cameraType == CameraType.Game && camera == Camera.main) || cameraType == CameraType.SceneView)
-                && (m_LastCamera != camera || m_LastCameraPosition != cameraPosition || m_LastCameraRotation != cameraRotation || m_SceneDirty))
-            {
-                var deltaForward = Vector3.Dot(cameraPosition - m_LastCameraPosition, cameraTransform.forward);
-
-                UpdateLODGroup(m_RootVolume, camera, cameraPosition, m_LastCamera == camera && deltaForward < 0f);
-
-                m_LastCamera = camera;
-                m_LastCameraPosition = cameraPosition;
-                m_LastCameraRotation = cameraRotation;
-            }
-        }
-
-        bool UpdateLODGroup(LODVolume lodVolume, Camera camera, Vector3 cameraPosition, bool fastPath)
-        {
-            var lodGroupEnabled = s_HLODEnabled;
-
-            var lodGroup = lodVolume.lodGroup;
-            var lodGroupExists = lodGroup != null && lodGroup.lodGroup;
-
-            // Start with leaf nodes first
-            var lodVolumeTransform = lodVolume.transform;
-            var childVolumes = lodVolume.childVolumes;
-            foreach (var childVolume in childVolumes)
-            {
-                if (childVolume)
-                {
-                    if (!fastPath || !lodGroupExists || !lodGroup.lodGroup.enabled)
-                        lodGroupEnabled &= UpdateLODGroup(childVolume, camera, cameraPosition, fastPath);
-                }
-            }
-            
-            if (lodGroupEnabled)
-            {
-                var allChildrenUsingCoarsestLOD = true;
-                if (lodVolumeTransform.childCount == 0) // Leaf node
-                {
-                    var cached = lodVolume.cached;
-
-                    // Disable all children LODGroups if an HLOD LODGroup could replace it
-                    foreach (var r in cached)
-                    {
-                        var childLODGroup = r as LODVolume.LODGroupHelper;
-
-                        if (childLODGroup != null && childLODGroup.GetCurrentLOD(camera, cameraPosition) != childLODGroup.GetMaxLOD())
-                        {
-                            allChildrenUsingCoarsestLOD = false;
-                            break;
-                        }
-                    }
-
-                    foreach (var r in cached)
-                    {
-                        var childLODGroup = r as LODVolume.LODGroupHelper;
-
-                        if (childLODGroup != null)
-                            childLODGroup.SetEnabled(!allChildrenUsingCoarsestLOD);
-                        else if (r != null)
-                            ((Renderer)r).enabled = !allChildrenUsingCoarsestLOD;
-                    }
-                }
-                else
-                {
-                    foreach (var childVolume in childVolumes)
-                    {
-                        var childLODGroup = childVolume.lodGroup;
-                        if (childLODGroup != null && childLODGroup.lodGroup)
-                        {
-                            var maxLOD = childLODGroup.GetMaxLOD();
-                            if (maxLOD > 0 && childLODGroup.GetCurrentLOD(camera, cameraPosition) != maxLOD)
-                            {
-                                allChildrenUsingCoarsestLOD = false;
-                                break;
-                            }
-                        }
-                    }
-
-                    foreach (var childVolume in childVolumes)
-                    {
-                        var childLODGroup = childVolume.lodGroup;
-                        if (childLODGroup != null && childLODGroup.lodGroup)
-                            childLODGroup.SetEnabled(!allChildrenUsingCoarsestLOD);
-                    }
-                }
-
-                lodGroupEnabled &= allChildrenUsingCoarsestLOD;
-            }
-            else if (!s_HLODEnabled && lodVolumeTransform.childCount == 0) // Re-enable default renderers
-            {
-                foreach (var r in lodVolume.renderers)
-                {
-                    if (!r)
-                        continue;
-
-                    var childLODGroup = r.GetComponentInParent<LODGroup>();
-                    if (childLODGroup)
-                        childLODGroup.SetEnabled(true);
-                    else
-                        r.enabled = true;
-                }
-            }
-
-            if (lodGroupExists)
-                lodGroup.SetEnabled(lodGroupEnabled);
-
-            return lodGroupEnabled;
+            m_RootVolume.UpdateLODGroup(camera, cameraPosition, false);
         }
     }
 }
