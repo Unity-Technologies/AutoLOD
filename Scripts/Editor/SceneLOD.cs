@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.Experimental.AutoLOD;
 using UnityEngine.SceneManagement;
 using Dbg = UnityEngine.Debug;
+using Debug = System.Diagnostics.Debug;
 using UnityObject = UnityEngine.Object;
 
 
@@ -129,12 +130,17 @@ namespace UnityEditor.Experimental.AutoLOD
 
             m_ServiceCoroutineQueue = null;
 #endif
+            if (m_RootVolume != null)
+                m_RootVolume.ResetLODGroup();
         }
 
         void OnDisable()
         {
             s_Activated = false;
             RemoveCallbacks();
+
+            if (m_RootVolume != null)
+                m_RootVolume.ResetLODGroup();
         }
 
         void AddCallbacks()
@@ -198,6 +204,9 @@ namespace UnityEditor.Experimental.AutoLOD
             {
                 s_HLODEnabled = !s_HLODEnabled;
                 m_LastCamera = null;
+
+                if ( m_RootVolume != null )
+                    m_RootVolume.ResetLODGroup();
             }
             else if (!m_RootVolume && m_CreateRootVolumeForScene != activeSceneName && GUILayout.Button("Activate SceneLOD"))
             {
@@ -440,26 +449,17 @@ namespace UnityEditor.Experimental.AutoLOD
             //if playing in editor, not use this flow.
             if (Application.isPlaying == true)
                 return;
+
+            if (s_HLODEnabled == false)
+                return;
             
             if (!m_RootVolume)
                 return;
 
-            var cameraType = camera.cameraType;
             var cameraTransform = camera.transform;
             var cameraPosition = cameraTransform.position;
-            var cameraRotation = cameraTransform.rotation;
 
-            if (((cameraType == CameraType.Game && camera == Camera.main) || cameraType == CameraType.SceneView)
-                && (m_LastCamera != camera || m_LastCameraPosition != cameraPosition || m_LastCameraRotation != cameraRotation || m_SceneDirty))
-            {
-                var deltaForward = Vector3.Dot(cameraPosition - m_LastCameraPosition, cameraTransform.forward);
-
-                m_RootVolume.UpdateLODGroup(camera, cameraPosition, false);
-
-                m_LastCamera = camera;
-                m_LastCameraPosition = cameraPosition;
-                m_LastCameraRotation = cameraRotation;
-            }
+            m_RootVolume.UpdateLODGroup(camera, cameraPosition, false);
         }
     }
 }
