@@ -33,7 +33,6 @@ namespace UnityEditor.Experimental.AutoLOD
         Coroutine m_ServiceCoroutineQueue;
         bool m_SceneDirty;
         Stopwatch m_ServiceCoroutineExecutionTime = new Stopwatch();
-        Camera m_LastCamera;
         HashSet<Renderer> m_ExcludedRenderers = new HashSet<Renderer>();
 
         // Local method variable caching
@@ -110,7 +109,6 @@ namespace UnityEditor.Experimental.AutoLOD
             if (m_RootVolume && GUILayout.Button(s_HLODEnabled ? "Disable HLOD" : "Enable HLOD"))
             {
                 s_HLODEnabled = !s_HLODEnabled;
-                m_LastCamera = null;
 
                 if ( m_RootVolume != null )
                     m_RootVolume.ResetLODGroup();
@@ -330,7 +328,6 @@ namespace UnityEditor.Experimental.AutoLOD
         {
             instance.m_CreateRootVolumeForScene = SceneManager.GetActiveScene().name;
             instance.m_SceneDirty = true;
-            instance.m_LastCamera = null;
         }
 
 
@@ -368,7 +365,6 @@ namespace UnityEditor.Experimental.AutoLOD
             bool showVolume = !Settings.ShowVolumeBounds;
             Menu.SetChecked(k_ShowVolumeBoundsMenuPath, showVolume);
 
-            LODVolume.drawBounds = showVolume;
             Settings.ShowVolumeBounds = showVolume;
 
             // Force more frequent updating
