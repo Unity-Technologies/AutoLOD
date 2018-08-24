@@ -87,8 +87,6 @@ namespace UnityEditor.Experimental.AutoLOD
                     }
                 }
 
-                var ci = new CombineInstance();
-
                 var mesh = Object.Instantiate(sharedMesh);
 
                 var mr = mf.GetComponent<MeshRenderer>();
@@ -158,9 +156,15 @@ namespace UnityEditor.Experimental.AutoLOD
                 mesh.uv2 = null;
                 mesh.colors = colors;
 
-                ci.mesh = mesh;
-                ci.transform = mf.transform.localToWorldMatrix;
-                combine.Add(ci);
+                for (int j = 0; j < subMeshCount; ++j)
+                {
+                    var ci = new CombineInstance();
+                    ci.mesh = mesh;
+                    ci.subMeshIndex = j;
+                    ci.transform = mf.transform.localToWorldMatrix;
+                    combine.Add(ci);
+                }
+                
 
                 mf.gameObject.SetActive(false);
 
