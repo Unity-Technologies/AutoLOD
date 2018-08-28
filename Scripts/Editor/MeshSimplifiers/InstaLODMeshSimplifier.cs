@@ -15,61 +15,68 @@ namespace UnityEditor.Experimental.AutoLOD
     {
         static object executionLock = new object();
 
-        public void Simplify(WorkingMesh inputMesh, WorkingMesh outputMesh, float quality)
+        public void Simplify(WorkingMesh inputMesh, WorkingMesh outputMesh, float quality, Action completeAction)
         {
-            Renderer renderer = null;
-
-            MonoBehaviourHelper.ExecuteOnMainThread(() =>
+            Action doAction = () =>
             {
-                var go = EditorUtility.CreateGameObjectWithHideFlags("Temp", HideFlags.HideAndDontSave, typeof(MeshRenderer), typeof(MeshFilter));
-                var mf = go.GetComponent<MeshFilter>();
-                var mesh = new Mesh();
-                inputMesh.ApplyToMesh(mesh);
-                mf.sharedMesh = mesh;
-                renderer = go.GetComponent<MeshRenderer>();
-                var material = new Material(Shader.Find("Standard"));
-                var sharedMaterials = new Material[mesh.subMeshCount];
-                for (int i = 0; i < mesh.subMeshCount; i++)
-                    sharedMaterials[i] = material;
-                renderer.sharedMaterials = sharedMaterials;
-                renderer.enabled = false;
-            });
+                Renderer renderer = null;
 
-            var settings = new InstaLODOptimizeSettings(quality);
-            settings.PercentTriangles = quality;
-            var nativeMeshSettings = new InstaLODNativeMeshOperationSettings(true);
-            nativeMeshSettings.hideSourceGameObjects = false;
-
-            lock (executionLock)
-            {
-                if (!MonoBehaviourHelper.IsMainThread())
+                MonoBehaviourHelper.ExecuteOnMainThread(() =>
                 {
-                    while (InstaLODNative.currentMeshOperationState != null)
+                    var go = EditorUtility.CreateGameObjectWithHideFlags("Temp", HideFlags.HideAndDontSave,
+                        typeof(MeshRenderer), typeof(MeshFilter));
+                    var mf = go.GetComponent<MeshFilter>();
+                    var mesh = new Mesh();
+                    inputMesh.ApplyToMesh(mesh);
+                    mf.sharedMesh = mesh;
+                    renderer = go.GetComponent<MeshRenderer>();
+                    var material = new Material(Shader.Find("Standard"));
+                    var sharedMaterials = new Material[mesh.subMeshCount];
+                    for (int i = 0; i < mesh.subMeshCount; i++)
+                        sharedMaterials[i] = material;
+                    renderer.sharedMaterials = sharedMaterials;
+                    renderer.enabled = false;
+                });
+
+                var settings = new InstaLODOptimizeSettings(quality);
+                settings.PercentTriangles = quality;
+                var nativeMeshSettings = new InstaLODNativeMeshOperationSettings(true);
+                nativeMeshSettings.hideSourceGameObjects = false;
+
+                lock (executionLock)
+                {
+                    if (!MonoBehaviourHelper.IsMainThread())
+                    {
+                        while (InstaLODNative.currentMeshOperationState != null)
+                            Thread.Sleep(100);
+                    }
+
+                    MonoBehaviourHelper.ExecuteOnMainThread(() =>
+                    {
+                        EditorWindow.GetWindow<InstaLODToolkitWindow>(); // Necessary for background processing
+                        InstaLODNative.Optimize(new List<Renderer>() {renderer}, settings, nativeMeshSettings);
+                        Selection.activeGameObject =
+                            null; // Necessary to avoid errors from InstaLOD trying to add settings component to imported model
+                    });
+                }
+
+                while (InstaLODNative.currentMeshOperationState != null)
+                {
+                    if (MonoBehaviourHelper.IsMainThread())
+                        InstaLODMainThreadAction.RunMainThreadActions();
+                    else
                         Thread.Sleep(100);
                 }
 
                 MonoBehaviourHelper.ExecuteOnMainThread(() =>
                 {
-                    EditorWindow.GetWindow<InstaLODToolkitWindow>(); // Necessary for background processing
-                    InstaLODNative.Optimize(new List<Renderer>() { renderer }, settings, nativeMeshSettings);
-                    Selection.activeGameObject = null; // Necessary to avoid errors from InstaLOD trying to add settings component to imported model
+                    var mf = renderer.GetComponent<MeshFilter>();
+                    mf.sharedMesh.ApplyToWorkingMesh(outputMesh);
+                    UnityObject.DestroyImmediate(mf.gameObject);
                 });
-            }
+            };
 
-            while (InstaLODNative.currentMeshOperationState != null)
-            {
-                if (MonoBehaviourHelper.IsMainThread())
-                    InstaLODMainThreadAction.RunMainThreadActions();
-                else
-                    Thread.Sleep(100);
-            }
-
-            MonoBehaviourHelper.ExecuteOnMainThread(() =>
-            {
-                var mf = renderer.GetComponent<MeshFilter>();
-                mf.sharedMesh.ApplyToWorkingMesh(outputMesh);
-                UnityObject.DestroyImmediate(mf.gameObject);
-            });
+            SimplifierRunner.instance.EnqueueSimplification(doAction, completeAction);
         }
     }
 }

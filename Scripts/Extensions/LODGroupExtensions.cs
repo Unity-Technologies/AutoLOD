@@ -17,16 +17,6 @@
             SetRenderersEnabled(lods, enabled);
         }
 
-        public static void SetEnabled(this LODVolume.LODGroupHelper lodGroupHelper, bool enabled)
-        {
-            var lodGroup = lodGroupHelper.lodGroup;
-            if (lodGroup.enabled != enabled)
-            {
-                lodGroup.enabled = enabled;
-                SetRenderersEnabled(lodGroupHelper.lods, enabled);
-            }
-        }
-
         static void SetRenderersEnabled(LOD[] lods, bool enabled)
         {
             for (var i = 0; i < lods.Length; i++)
@@ -55,20 +45,6 @@
             var lodIndex = GetCurrentLOD(lods, lodGroup.GetMaxLOD(), relativeHeight, camera);
 
             return lodIndex;
-        }
-
-        public static int GetMaxLOD(this LODVolume.LODGroupHelper lodGroupHelper)
-        {
-            return lodGroupHelper.maxLOD;
-        }
-
-        public static int GetCurrentLOD(this LODVolume.LODGroupHelper lodGroupHelper, Camera camera = null, Vector3? cameraPosition = null)
-        {
-            var lods = lodGroupHelper.lods;
-            camera = camera ?? Camera.current;
-            cameraPosition = cameraPosition ?? camera.transform.position;
-            var relativeHeight = lodGroupHelper.GetRelativeHeight(camera, cameraPosition.Value);
-            return GetCurrentLOD(lods, lodGroupHelper.GetMaxLOD(), relativeHeight, camera);
         }
 
         public static float GetWorldSpaceSize(this LODGroup lodGroup)
@@ -116,13 +92,8 @@
         static float GetRelativeHeight(this LODGroup lodGroup, Camera camera)
         {
             var distance = (lodGroup.transform.TransformPoint(lodGroup.localReferencePoint) - camera.transform.position).magnitude;
-            return DistanceToRelativeHeight(camera, distance, lodGroup.GetWorldSpaceSize());
+            return DistanceToRelativeHeight(camera, distance, lodGroup.GetWorldSpaceSize()) * QualitySettings.lodBias;
         }
 
-        static float GetRelativeHeight(this LODVolume.LODGroupHelper lodGroupHelper, Camera camera, Vector3 cameraPosition)
-        {
-            var distance = (lodGroupHelper.referencePoint - cameraPosition).magnitude;
-            return DistanceToRelativeHeight(camera, distance, lodGroupHelper.worldSpaceSize);
-        }
     }
 }

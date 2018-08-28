@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.Experimental.AutoLOD;
 using UnityEngine.SceneManagement;
 using Dbg = UnityEngine.Debug;
+using Debug = System.Diagnostics.Debug;
 using UnityObject = UnityEngine.Object;
 
 
@@ -15,69 +16,10 @@ namespace UnityEditor.Experimental.AutoLOD
 {
     public class SceneLOD : ScriptableSingleton<SceneLOD>
     {
-        class SceneLODAssetProcessor : AssetModificationProcessor
-        {
-            public static string[] OnWillSaveAssets(string[] paths)
-            {
-                foreach (string path in paths)
-                {
-                    if (path.Contains(".unity"))
-                    {
-                        AssetDatabase.StartAssetEditing();
-
-                        var scene = SceneManager.GetSceneByPath(path);
-                        var rootGameObjects = scene.GetRootGameObjects();
-                        foreach (var go in rootGameObjects)
-                        {
-                            var lodVolume = go.GetComponent<LODVolume>();
-                            if (lodVolume)
-                                PersistHLODs(lodVolume, path);
-                        }
-
-                        AssetDatabase.StopAssetEditing();
-                    }
-                }
- 
-                return paths;
-            }
-
-            static void PersistHLODs(LODVolume lodVolume, string scenePath)
-            {
-                var hlodRoot = lodVolume.hlodRoot;
-                if (hlodRoot)
-                {
-                    var mf = hlodRoot.GetComponent<MeshFilter>();
-                    var sharedMesh= mf.sharedMesh;
-                    if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(sharedMesh)))
-                    {
-                        SaveUniqueHLODAsset(sharedMesh, scenePath);
-                    }
-                }
-
-                foreach (Transform child in lodVolume.transform)
-                {
-                    var childLODVolume = child.GetComponent<LODVolume>();
-                    if (childLODVolume)
-                        PersistHLODs(childLODVolume, scenePath);
-                }
-            }
-
-            static void SaveUniqueHLODAsset(UnityObject asset, string scenePath)
-            {
-                if (!string.IsNullOrEmpty(scenePath))
-                {
-                    var directory = Path.GetDirectoryName(scenePath) + "/" + Path.GetFileNameWithoutExtension(scenePath) + "_HLOD/";
-                    if (!Directory.Exists(directory))
-                        Directory.CreateDirectory(directory);
-
-                    var path = directory + Path.GetRandomFileName();
-                    path = Path.ChangeExtension(path, "asset");
-                    AssetDatabase.CreateAsset(asset, path);
-                }
-            }
-        }
-
-        public static bool activated { get { return s_Activated; } }
+        private const string k_GenerateSceneLODMenuPath = "AutoLOD/Generate SceneLOD";
+        private const string k_DestroySceneLODMenuPath = "AutoLOD/Destroy SceneLOD";
+        private const string k_UpdateSceneLODMenuPath = "AutoLOD/Update SceneLOD";
+        private const string k_ShowVolumeBoundsMenuPath = "AutoLOD/Show Volume Bounds";
 
         public int coroutineQueueRemaining { get { return m_CoroutineQueue.Count; }}
         public long coroutineCurrentExecutionTime { get { return m_ServiceCoroutineExecutionTime.ElapsedMilliseconds; }}
@@ -87,16 +29,11 @@ namespace UnityEditor.Experimental.AutoLOD
         
         string m_CreateRootVolumeForScene = "Default"; // Set to some value, so new scenes don't auto-create
         LODVolume m_RootVolume;
-        GameObject[] m_SelectedObjects;
-        Dictionary<GameObject, Pose> m_SelectedObjectLastPose = new Dictionary<GameObject, Pose>();
         Queue<IEnumerator> m_CoroutineQueue = new Queue<IEnumerator>();
         Coroutine m_ServiceCoroutineQueue;
         bool m_SceneDirty;
         Stopwatch m_ServiceCoroutineExecutionTime = new Stopwatch();
-        Camera m_LastCamera;
         HashSet<Renderer> m_ExcludedRenderers = new HashSet<Renderer>();
-        Vector3 m_LastCameraPosition;
-        Quaternion m_LastCameraRotation;
 
         // Local method variable caching
         List<Renderer> m_FoundRenderers = new List<Renderer>();
@@ -129,19 +66,24 @@ namespace UnityEditor.Experimental.AutoLOD
 
             m_ServiceCoroutineQueue = null;
 #endif
+            if (m_RootVolume != null)
+                m_RootVolume.ResetLODGroup();
+
+            Menu.SetChecked(k_ShowVolumeBoundsMenuPath, Settings.ShowVolumeBounds);
         }
 
         void OnDisable()
         {
             s_Activated = false;
             RemoveCallbacks();
+
+            if (m_RootVolume != null)
+                m_RootVolume.ResetLODGroup();
         }
 
         void AddCallbacks()
         {
             EditorApplication.update += EditorUpdate;
-            EditorApplication.hierarchyWindowChanged += OnHierarchyChanged;
-            Selection.selectionChanged += OnSelectionChanged;
             Camera.onPreCull += PreCull;
             SceneView.onSceneGUIDelegate += OnSceneGUI;
         }
@@ -149,38 +91,8 @@ namespace UnityEditor.Experimental.AutoLOD
         void RemoveCallbacks()
         {
             EditorApplication.update -= EditorUpdate;
-            EditorApplication.hierarchyWindowChanged -= OnHierarchyChanged;
-            Selection.selectionChanged -= OnSelectionChanged;
             Camera.onPreCull -= PreCull;
             SceneView.onSceneGUIDelegate -= OnSceneGUI;
-        }
-
-        void OnHierarchyChanged()
-        {
-            m_SceneDirty = true;
-            m_ExcludedRenderers.Clear();
-        }
-
-        void OnSelectionChanged()
-        {
-            if (!m_RootVolume)
-                return;
-
-            if (m_SelectedObjects != null)
-                m_CoroutineQueue.Enqueue(UpdateOctreeBounds(m_SelectedObjects));
-
-            m_SelectedObjects = Selection.gameObjects;
-            if (m_SelectedObjects != null)
-            {
-                foreach (var selected in m_SelectedObjects)
-                {
-                    if (selected)
-                    {
-                        var selectedTransform = selected.transform;
-                        m_SelectedObjectLastPose[selected] = new Pose(selectedTransform.position, selectedTransform.rotation);
-                    }
-                }
-            }
         }
 
         void OnSceneGUI(SceneView sceneView)
@@ -197,66 +109,15 @@ namespace UnityEditor.Experimental.AutoLOD
             if (m_RootVolume && GUILayout.Button(s_HLODEnabled ? "Disable HLOD" : "Enable HLOD"))
             {
                 s_HLODEnabled = !s_HLODEnabled;
-                m_LastCamera = null;
-            }
-            else if (!m_RootVolume && m_CreateRootVolumeForScene != activeSceneName && GUILayout.Button("Activate SceneLOD"))
-            {
-                m_CreateRootVolumeForScene = activeSceneName;
-                m_SceneDirty = true;
-                m_LastCamera = null;
+
+                if ( m_RootVolume != null )
+                    m_RootVolume.ResetLODGroup();
             }
 
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
             GUILayout.EndArea();
             Handles.EndGUI();
-        }
-
-        IEnumerator UpdateOctreeBounds(GameObject[] gameObjects)
-        {
-            foreach (var go in gameObjects)
-            {
-                if (!go)
-                    continue;
-
-                Pose pose;
-                if (m_SelectedObjectLastPose.TryGetValue(go, out pose))
-                {
-                    var goTransform = go.transform;
-                    if (pose.position == goTransform.position && pose.rotation == goTransform.rotation)
-                        continue;
-                }
-
-                yield return UpdateChangedRenderer(go);
-            }
-        }
-
-        IEnumerator UpdateChangedRenderer(GameObject go)
-        {
-            if (!go)
-                yield break;
-
-            while (!m_RootVolume)
-                yield return UpdateOctree();
-
-            var transform = go.transform;
-            var renderer = go.GetComponent<Renderer>();
-            if (renderer)
-            {
-                if (transform.hasChanged && m_RootVolume.renderers.Contains(renderer))
-                {
-                    yield return m_RootVolume.UpdateRenderer(renderer);
-                    yield return SetRootLODVolume(); // In case the BVH has grown or shrunk
-                    transform.hasChanged = false;
-                }
-            }
-
-            foreach (Transform child in transform)
-            {
-                yield return UpdateChangedRenderer(child.gameObject);
-                if (!transform)
-                    yield break;
-            }
         }
 
         IEnumerator UpdateOctree()
@@ -436,120 +297,83 @@ namespace UnityEditor.Experimental.AutoLOD
         // PreCull is called before LODGroup updates
         void PreCull(Camera camera)
         {
+
+            //if playing in editor, not use this flow.
+            if (Application.isPlaying == true)
+                return;
+
+            if (s_HLODEnabled == false)
+                return;
+            
             if (!m_RootVolume)
                 return;
 
-            var cameraType = camera.cameraType;
             var cameraTransform = camera.transform;
             var cameraPosition = cameraTransform.position;
-            var cameraRotation = cameraTransform.rotation;
 
-            if (((cameraType == CameraType.Game && camera == Camera.main) || cameraType == CameraType.SceneView)
-                && (m_LastCamera != camera || m_LastCameraPosition != cameraPosition || m_LastCameraRotation != cameraRotation || m_SceneDirty))
-            {
-                var deltaForward = Vector3.Dot(cameraPosition - m_LastCameraPosition, cameraTransform.forward);
-
-                UpdateLODGroup(m_RootVolume, camera, cameraPosition, m_LastCamera == camera && deltaForward < 0f);
-
-                m_LastCamera = camera;
-                m_LastCameraPosition = cameraPosition;
-                m_LastCameraRotation = cameraRotation;
-            }
+            m_RootVolume.UpdateLODGroup(camera, cameraPosition, false);
         }
 
-        bool UpdateLODGroup(LODVolume lodVolume, Camera camera, Vector3 cameraPosition, bool fastPath)
+#region Menu
+        //AutoLOD requires Unity 2017.3 or a later version
+#if UNITY_2017_3_OR_NEWER
+        [MenuItem(k_GenerateSceneLODMenuPath, true, priority = 1)]
+        static bool CanGenerateSceneLOD(MenuCommand menuCommand)
         {
-            var lodGroupEnabled = s_HLODEnabled;
-
-            var lodGroup = lodVolume.lodGroup;
-            var lodGroupExists = lodGroup != null && lodGroup.lodGroup;
-
-            // Start with leaf nodes first
-            var lodVolumeTransform = lodVolume.transform;
-            var childVolumes = lodVolume.childVolumes;
-            foreach (var childVolume in childVolumes)
-            {
-                if (childVolume)
-                {
-                    if (!fastPath || !lodGroupExists || !lodGroup.lodGroup.enabled)
-                        lodGroupEnabled &= UpdateLODGroup(childVolume, camera, cameraPosition, fastPath);
-                }
-            }
-            
-            if (lodGroupEnabled)
-            {
-                var allChildrenUsingCoarsestLOD = true;
-                if (lodVolumeTransform.childCount == 0) // Leaf node
-                {
-                    var cached = lodVolume.cached;
-
-                    // Disable all children LODGroups if an HLOD LODGroup could replace it
-                    foreach (var r in cached)
-                    {
-                        var childLODGroup = r as LODVolume.LODGroupHelper;
-
-                        if (childLODGroup != null && childLODGroup.GetCurrentLOD(camera, cameraPosition) != childLODGroup.GetMaxLOD())
-                        {
-                            allChildrenUsingCoarsestLOD = false;
-                            break;
-                        }
-                    }
-
-                    foreach (var r in cached)
-                    {
-                        var childLODGroup = r as LODVolume.LODGroupHelper;
-
-                        if (childLODGroup != null)
-                            childLODGroup.SetEnabled(!allChildrenUsingCoarsestLOD);
-                        else if (r != null)
-                            ((Renderer)r).enabled = !allChildrenUsingCoarsestLOD;
-                    }
-                }
-                else
-                {
-                    foreach (var childVolume in childVolumes)
-                    {
-                        var childLODGroup = childVolume.lodGroup;
-                        if (childLODGroup != null && childLODGroup.lodGroup)
-                        {
-                            var maxLOD = childLODGroup.GetMaxLOD();
-                            if (maxLOD > 0 && childLODGroup.GetCurrentLOD(camera, cameraPosition) != maxLOD)
-                            {
-                                allChildrenUsingCoarsestLOD = false;
-                                break;
-                            }
-                        }
-                    }
-
-                    foreach (var childVolume in childVolumes)
-                    {
-                        var childLODGroup = childVolume.lodGroup;
-                        if (childLODGroup != null && childLODGroup.lodGroup)
-                            childLODGroup.SetEnabled(!allChildrenUsingCoarsestLOD);
-                    }
-                }
-
-                lodGroupEnabled &= allChildrenUsingCoarsestLOD;
-            }
-            else if (!s_HLODEnabled && lodVolumeTransform.childCount == 0) // Re-enable default renderers
-            {
-                foreach (var r in lodVolume.renderers)
-                {
-                    if (!r)
-                        continue;
-
-                    var childLODGroup = r.GetComponentInParent<LODGroup>();
-                    if (childLODGroup)
-                        childLODGroup.SetEnabled(true);
-                    else
-                        r.enabled = true;
-                }
-            }
-
-            if (lodGroupExists)
-                lodGroup.SetEnabled(lodGroupEnabled);
-
-            return lodGroupEnabled;
+            return instance.m_RootVolume == null;
         }
+
+        [MenuItem(k_GenerateSceneLODMenuPath, priority = 1)]
+        static void GenerateSceneLOD(MenuCommand menuCommand)
+        {
+            instance.m_CreateRootVolumeForScene = SceneManager.GetActiveScene().name;
+            instance.m_SceneDirty = true;
+        }
+
+
+        [MenuItem(k_DestroySceneLODMenuPath, true, priority = 1)]
+        static bool CanDestroySceneLOD(MenuCommand menuCommand)
+        {
+            return instance.m_RootVolume != null;
+        }
+
+        [MenuItem(k_DestroySceneLODMenuPath, priority = 1)]
+        static void DestroySceneLOD(MenuCommand menuCommand)
+        {
+            MonoBehaviourHelper.StartCoroutine(ObjectUtils.FindGameObject("HLODs",
+                root => { DestroyImmediate(root); }));
+            DestroyImmediate(instance.m_RootVolume.gameObject);
+            instance.m_SceneDirty = false;
+        }
+
+        [MenuItem(k_UpdateSceneLODMenuPath, true, priority = 1)]
+        static bool CanUpdateSceneLOD(MenuCommand menuCommand)
+        {
+            return instance.m_RootVolume != null;
+        }
+
+        [MenuItem(k_UpdateSceneLODMenuPath, priority = 1)]
+        static void UpdateSceneLOD(MenuCommand menuCommand)
+        {
+            DestroySceneLOD(menuCommand);
+            GenerateSceneLOD(menuCommand);
+        }
+
+        [MenuItem(k_ShowVolumeBoundsMenuPath, priority = 50)]
+        static void ShowVolumeBounds(MenuCommand menuCommand)
+        {
+            bool showVolume = !Settings.ShowVolumeBounds;
+            Menu.SetChecked(k_ShowVolumeBoundsMenuPath, showVolume);
+
+            Settings.ShowVolumeBounds = showVolume;
+
+            // Force more frequent updating
+            var mouseOverWindow = EditorWindow.mouseOverWindow;
+            if (mouseOverWindow)
+                mouseOverWindow.Repaint();
+
+        }
+#endif
+#endregion
     }
 }
