@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading;
 using UnityEngine;
 
 namespace UnityEditor.Experimental.AutoLOD
@@ -20,43 +21,87 @@ namespace UnityEditor.Experimental.AutoLOD
 
         void OnEnable()
         {
+            
+            m_Workers.Clear();
+            m_SimplificationActions.Clear();
+            m_CompleteActions.Clear();
+
             EditorApplication.update += EditorUpdate;
+
+            m_IsWorking = true;
+            for (int i = 0; i < k_MaxWorkerCount; ++i)
+            {
+                BackgroundWorker worker = new BackgroundWorker();
+                worker.DoWork += Worker_DoWork;
+                worker.RunWorkerAsync();
+                m_Workers.Add(worker);
+            }
+            
         }
+
+        
 
         void OnDisable()
         {
+            m_IsWorking = false;
+            foreach (var worker in m_Workers)
+            {
+                worker.CancelAsync();
+            }
+
             EditorApplication.update -= EditorUpdate;
+
+            m_Workers.Clear();
+            m_SimplificationActions.Clear();
+            m_CompleteActions.Clear();
+
+            
         }
 
-        private void EditorUpdate()
+        private void Worker_DoWork(object sender, DoWorkEventArgs e)
         {
-            while (m_SimplificationActions.Count > 0 && m_WorkerCount < k_MaxWorkerCount)
+            while (m_IsWorking)
             {
-                ActionContainer action = m_SimplificationActions.Dequeue();
-                RunWorker(action);
+                if (m_SimplificationActions.Count == 0)
+                {
+                    Thread.Sleep(100);
+                    continue;
+                }
+
+                ActionContainer actionContainer;
+                lock (m_SimplificationActions)
+                {
+                    //double check for empty in lock.
+                    if (m_SimplificationActions.Count == 0)
+                        continue;
+
+                    actionContainer = m_SimplificationActions.Dequeue();
+                }
+
+                actionContainer.DoAction();
+
+                lock (m_CompleteActions)
+                {
+                    m_CompleteActions.Enqueue(actionContainer.CompleteAction);
+                }
             }
         }
-
-        private void RunWorker(ActionContainer action)
+        private void EditorUpdate()
         {
-            BackgroundWorker worker = new BackgroundWorker();
-            worker.DoWork += (sender, args) =>
+            while (m_CompleteActions.Count > 0)
             {
-                if (action.DoAction != null)
-                    action.DoAction();
-            };
-            worker.RunWorkerCompleted += (sender, args) =>
-            {
-                m_WorkerCount -= 1;
-                if (action.CompleteAction != null)
-                    action.CompleteAction();
-            };
+                Action completeAction;
+                lock (m_CompleteActions)
+                {
+                    if (m_CompleteActions.Count == 0)
+                        return;
 
-            m_WorkerCount += 1;
+                    completeAction = m_CompleteActions.Dequeue();
+                }
 
-            worker.RunWorkerAsync();
+                completeAction();
+            }
         }
-
 
         public void EnqueueSimplification(Action doAction, Action completeAction)
         {
@@ -76,8 +121,11 @@ namespace UnityEditor.Experimental.AutoLOD
         }
 
 
-        private int m_WorkerCount = 0;
+        private bool m_IsWorking = false;
+        private List<BackgroundWorker> m_Workers = new List<BackgroundWorker>();
+
         private Queue<ActionContainer> m_SimplificationActions = new Queue<ActionContainer>();
+        private Queue<Action> m_CompleteActions = new Queue<Action>();
 
 
     }
