@@ -679,33 +679,25 @@ public class LODVolume : MonoBehaviour
                     lodMF.sharedMesh = simplifiedMesh;
                     meshes.Add(simplifiedMesh);
 
-                    var worker = new BackgroundWorker();
-
                     var index = l;
                     var inputMesh = sharedMesh.ToWorkingMesh();
                     var outputMesh = simplifiedMesh.ToWorkingMesh();
 
                     var meshSimplifier = (IMeshSimplifier)Activator.CreateInstance(meshSimplifierType);
-                    worker.DoWork += (sender, args) =>
-                    {
-                        meshSimplifier.Simplify(inputMesh, outputMesh, Mathf.Pow(0.5f, l));
-                        args.Result = outputMesh;
-                    };
 
-                    worker.RunWorkerCompleted += (sender, args) =>
+
+
+                    meshSimplifier.Simplify(inputMesh, outputMesh, Mathf.Pow(0.5f, l), () =>
                     {
                         Debug.Log("Completed LOD " + index);
-                        var resultMesh = (WorkingMesh)args.Result;
-                        resultMesh.ApplyToMesh(simplifiedMesh);
+                        outputMesh.ApplyToMesh(simplifiedMesh);
                         simplifiedMesh.RecalculateBounds();
 
                         runningMeshCount++;
                         Debug.Log(runningMeshCount + " vs " + totalMeshCount);
                         if (runningMeshCount == totalMeshCount && completedCallback != null)
                             completedCallback();
-                    };
-
-                    worker.RunWorkerAsync();
+                    });
                 }
 
                 var lod = lods[l];

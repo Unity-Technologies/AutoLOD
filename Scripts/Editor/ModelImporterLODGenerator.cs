@@ -1,5 +1,4 @@
-﻿//#define SINGLE_THREADED
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -343,7 +342,6 @@ namespace UnityEditor.Experimental.AutoLOD
                 inputMesh = meshLOD.inputMesh.ToWorkingMesh();
 
             var meshSimplifier = (IMeshSimplifier)Activator.CreateInstance(meshLOD.meshSimplifierType);
-#if !SINGLE_THREADED
             var worker = new BackgroundWorker();
             worker.DoWork += (sender, args) =>
             {
@@ -355,41 +353,26 @@ namespace UnityEditor.Experimental.AutoLOD
 
                     MonoBehaviourHelper.ExecuteOnMainThread(() => inputMesh = meshLOD.inputMesh.ToWorkingMesh());
                 }
-#endif
 
                 var outputMesh = new WorkingMesh();
 #if UNITY_2017_3_OR_NEWER
                 outputMesh.indexFormat = inputMesh.indexFormat;
 #endif
-                meshSimplifier.Simplify(inputMesh, outputMesh, meshLOD.quality);
-#if !SINGLE_THREADED
-                args.Result = outputMesh;
-            };
-#endif
+                meshSimplifier.Simplify(inputMesh, outputMesh, meshLOD.quality, () =>
+                {
+                    var outMesh = meshLOD.outputMesh;
+                    Debug.Log("Completed LOD " + outMesh.name);
+                    outputMesh.name = outMesh.name;
+                    outputMesh.ApplyToMesh(outMesh);
+                    outMesh.RecalculateBounds();
 
-#if !SINGLE_THREADED
-            worker.RunWorkerCompleted += (sender, args) =>
-#endif
-            {
-                var outMesh = meshLOD.outputMesh;
-                Debug.Log("Completed LOD " + outMesh.name);
-#if !SINGLE_THREADED
-                var resultMesh = (WorkingMesh)args.Result;
-#else
-                var resultMesh = outputMesh;
-#endif
-                resultMesh.name = outMesh.name;
-                resultMesh.ApplyToMesh(outMesh);
-                outMesh.RecalculateBounds();
-
-                var outputMeshID = outMesh.GetInstanceID();
-                if (preprocessMeshes.Remove(outputMeshID))
-                    Debug.Log("Pre-process mesh complete: " + outputMeshID);
+                    var outputMeshID = outMesh.GetInstanceID();
+                    if (preprocessMeshes.Remove(outputMeshID))
+                        Debug.Log("Pre-process mesh complete: " + outputMeshID);
+                });;
             };
 
-#if !SINGLE_THREADED
             worker.RunWorkerAsync();
-#endif
         }
 
         static void AppendLODNameToRenderers(Transform root, int lod)

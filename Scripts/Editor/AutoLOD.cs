@@ -396,7 +396,7 @@ namespace UnityEditor.Experimental.AutoLOD
             }
         }
 
-        static void GenerateLODs(GameObject go)
+        public static void GenerateLODs(GameObject go)
         {
             // A NOP to make sure we have an instance before launching into threads that may need to execute on the main thread
             MonoBehaviourHelper.ExecuteOnMainThread(() => {});
@@ -447,27 +447,18 @@ namespace UnityEditor.Experimental.AutoLOD
                         lodMF.sharedMesh = simplifiedMesh;
                         meshes.Add(simplifiedMesh);
 
-                        var worker = new BackgroundWorker();
 
                         var index = l;
                         var inputMesh = sharedMesh.ToWorkingMesh();
                         var outputMesh = simplifiedMesh.ToWorkingMesh();
 
                         var meshSimplifier = (IMeshSimplifier)Activator.CreateInstance(meshSimplifierType);
-                        worker.DoWork += (sender, args) =>
+                        meshSimplifier.Simplify(inputMesh, outputMesh, Mathf.Pow(0.5f, index), () =>
                         {
-                            meshSimplifier.Simplify(inputMesh, outputMesh, Mathf.Pow(0.5f, index));
-                            args.Result = outputMesh;
-                        };
-
-                        worker.RunWorkerCompleted += (sender, args) =>
-                        {
-                            var resultMesh = (WorkingMesh)args.Result;
-                            resultMesh.ApplyToMesh(simplifiedMesh);
+                            outputMesh.ApplyToMesh(simplifiedMesh);
                             simplifiedMesh.RecalculateBounds();
-                        };
-
-                        worker.RunWorkerAsync();
+                        });
+                       
                     }
 
                     var lod = lods[l];
