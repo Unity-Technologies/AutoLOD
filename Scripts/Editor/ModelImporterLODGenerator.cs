@@ -254,9 +254,8 @@ namespace UnityEditor.Experimental.AutoLOD
                 }
 
                 if (importerLODLevels.arraySize != 0 && maxLODFound != importerLODLevels.arraySize)
-                {
-                    Debug.LogWarning("The model has the own lod group but it will not be used because the specified lod count in settings is different.");
-                }
+                    Debug.LogWarning("The model has an existing lod group, but it's settings will not be used because " +
+                        "the specified lod count in the AutoLOD settings is different.");
 
                 var lodGroup = go.AddComponent<LODGroup>();
                 lodGroup.SetLODs(lods.ToArray());
