@@ -36,7 +36,7 @@ namespace UnityEditor.Experimental.AutoLOD
             {
                 if (go.GetComponentsInChildren<SkinnedMeshRenderer>().Any())
                 {
-                    Debug.Log("Automatic LOD generation on does not currently support skinned meshes on import");
+                    Debug.LogWarning("Automatic LOD generation on skinned meshes is not currently supported");
                     return;
                 }
 
