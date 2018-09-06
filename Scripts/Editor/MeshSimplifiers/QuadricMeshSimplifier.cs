@@ -1,8 +1,15 @@
-﻿using Unity.AutoLOD;
+﻿#if ENABLE_UNITYMESHSIMPLIFIER
+using Unity.AutoLOD;
 using UnityEngine;
 using UnityMeshSimplifier;
 using Mesh = Unity.AutoLOD.WorkingMesh;
+#endif
 
+#if UNITY_2017_3_OR_NEWER
+[assembly: Unity.AutoLOD.OptionalDependency("UnityMeshSimplifier.MeshSimplifier", "ENABLE_UNITYMESHSIMPLIFIER")]
+#endif
+
+#if ENABLE_UNITYMESHSIMPLIFIER
 namespace Unity.AutoLOD
 {
     public class QuadricMeshSimplifier : IMeshSimplifier
@@ -45,3 +52,4 @@ namespace Unity.AutoLOD
 
     }
 }
+#endif
