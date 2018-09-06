@@ -4,11 +4,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using Unity.AutoLOD;
+using Unity.AutoLOD.Utilities;
 using UnityEditor;
-using UnityEditor.Experimental.AutoLOD;
-using UnityEditor.Experimental.AutoLOD.Utilities;
 using UnityEngine;
-using UnityEngine.Experimental.AutoLOD;
 using UnityEngine.Rendering;
 
 [RequiresLayer(HLODLayer)]

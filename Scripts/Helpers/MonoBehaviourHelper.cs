@@ -2,11 +2,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
-using UnityEditor.Experimental.AutoLOD.Utilities;
+using Unity.AutoLOD.Utilities;
+using UnityEditor;
 using UnityEngine;
-using UnityEngine.Experimental.AutoLOD;
 
-namespace UnityEditor.Experimental.AutoLOD
+namespace Unity.AutoLOD
 {
     // Useful for launching co-routines in the Editor or executing something on the main thread
 #if UNITY_EDITOR

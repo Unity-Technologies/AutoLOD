@@ -5,11 +5,12 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Unity.AutoLOD;
+using UnityEditor;
 using UnityEngine;
-using UnityEngine.Experimental.AutoLOD;
 using UnityObject = UnityEngine.Object;
 
-namespace UnityEditor.Experimental.AutoLOD
+namespace Unity.AutoLOD
 {
     public class ModelImporterLODGenerator : AssetPostprocessor
     {

@@ -1,9 +1,10 @@
 ﻿using System.Collections;
 using UnityEditor;
 using UnityEditorInternal;
+using UnityEngine;
 using UnityEngine.Playables;
 
-namespace UnityEngine.Experimental.AutoLOD
+namespace Unity.AutoLOD
 {
     public class ProfileAnimation : MonoBehaviour
     {

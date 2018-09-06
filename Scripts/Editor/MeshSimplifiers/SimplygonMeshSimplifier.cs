@@ -13,10 +13,15 @@ using Simplygon.Unity.EditorPlugin;
 using Simplygon.Unity.EditorPlugin.Jobs;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Experimental.AutoLOD;
 using UnityObject = UnityEngine.Object;
+#endif
 
-namespace UnityEditor.Experimental.AutoLOD
+#if UNITY_2017_3_OR_NEWER
+[assembly: Unity.AutoLOD.OptionalDependency("Simplygon.Unity.EditorPlugin.Window", "ENABLE_SIMPLYGON")]
+#endif
+
+#if ENABLE_SIMPLYGON
+namespace Unity.AutoLOD
 {
     public class SimplygonMeshSimplifier : IMeshSimplifier
     {
@@ -134,6 +139,4 @@ namespace UnityEditor.Experimental.AutoLOD
         }
     }
 }
-#elif UNITY_2017_3_OR_NEWER
-    [assembly: UnityEditor.Experimental.AutoLOD.OptionalDependency("Simplygon.Unity.EditorPlugin.Window", "ENABLE_SIMPLYGON")]
 #endif

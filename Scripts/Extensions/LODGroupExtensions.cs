@@ -1,4 +1,6 @@
-﻿namespace UnityEngine.Experimental.AutoLOD
+﻿using UnityEngine;
+
+namespace Unity.AutoLOD
 {
     public static class LODGroupExtensions
     {

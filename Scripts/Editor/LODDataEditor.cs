@@ -1,6 +1,8 @@
-﻿using UnityEngine;
+﻿using UnityEditor;
+using Unity.AutoLOD;
+using UnityEngine;
 
-namespace UnityEditor.Experimental.AutoLOD
+namespace Unity.AutoLOD
 {
     [CustomEditor(typeof(LODData))]
     [CanEditMultipleObjects]

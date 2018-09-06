@@ -6,10 +6,16 @@ using System.Threading;
 using InstaLOD;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Experimental.AutoLOD;
+using Unity.AutoLOD;
 using UnityObject = UnityEngine.Object;
+#endif
 
-namespace UnityEditor.Experimental.AutoLOD
+#if UNITY_2017_3_OR_NEWER
+[assembly: Unity.AutoLOD.OptionalDependency("InstaLOD.InstaLODNative", "ENABLE_INSTALOD")]
+#endif
+
+#if ENABLE_INSTALOD
+namespace Unity.AutoLOD
 {
     public class InstaLODMeshSimplifier : IMeshSimplifier
     {
@@ -73,9 +79,4 @@ namespace UnityEditor.Experimental.AutoLOD
         }
     }
 }
-#else
-#if UNITY_2017_3_OR_NEWER
-    [assembly: UnityEditor.Experimental.AutoLOD.OptionalDependency("InstaLOD.InstaLODNative", "ENABLE_INSTALOD")]
-#endif
-
 #endif

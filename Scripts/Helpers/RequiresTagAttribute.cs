@@ -1,7 +1,7 @@
 ﻿// From: https://github.com/Unity-Technologies/EditorVR
 using System;
 
-namespace UnityEditor.Experimental.AutoLOD
+namespace Unity.AutoLOD
 {
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
 	sealed class RequiresTagAttribute : Attribute

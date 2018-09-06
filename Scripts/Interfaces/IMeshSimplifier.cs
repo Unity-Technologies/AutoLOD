@@ -1,4 +1,4 @@
-﻿namespace UnityEngine.Experimental.AutoLOD
+﻿namespace Unity.AutoLOD
 {
     public interface IMeshSimplifier
     {

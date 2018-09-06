@@ -4,12 +4,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using UnityEditor;
 using UnityEngine;
-using UnityEngine.Profiling;
 using UnityEngine.SceneManagement;
 using UnityObject = UnityEngine.Object;
 
-namespace UnityEditor.Experimental.AutoLOD.Utilities
+namespace Unity.AutoLOD.Utilities
 {
 	/// <summary>
 	/// Object related EditorVR utilities

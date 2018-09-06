@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace UnityEditor.Experimental.AutoLOD
+namespace Unity.AutoLOD
 {
     [Conditional("UNITY_CCU")]
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]

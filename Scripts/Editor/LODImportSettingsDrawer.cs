@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq;
-using UnityEditor.Experimental.AutoLOD.Utilities;
+using Unity.AutoLOD.Utilities;
+using UnityEditor;
 using UnityEngine;
-using UnityEngine.Experimental.AutoLOD;
 
-namespace UnityEditor.Experimental.AutoLOD
+namespace Unity.AutoLOD
 {
     [CustomPropertyDrawer(typeof(LODImportSettings))]
     public class LODImportSettingsDrawer : PropertyDrawer

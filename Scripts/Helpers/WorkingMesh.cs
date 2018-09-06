@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace UnityEngine.Experimental.AutoLOD
+namespace Unity.AutoLOD
 {
     public static class MeshExtensions
     {

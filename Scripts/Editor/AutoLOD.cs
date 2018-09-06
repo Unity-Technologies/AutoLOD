@@ -4,12 +4,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using UnityEditor.Experimental.AutoLOD.Utilities;
+using Unity.AutoLOD.Utilities;
+using UnityEditor;
 using UnityEngine;
-using UnityEngine.Experimental.AutoLOD;
 using UnityObject = UnityEngine.Object;
 
-namespace UnityEditor.Experimental.AutoLOD
+namespace Unity.AutoLOD
 {
     [InitializeOnLoad]
     class AutoLOD

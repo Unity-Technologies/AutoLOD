@@ -1,7 +1,8 @@
-﻿using UnityEditor.Experimental.AutoLOD.Utilities;
+﻿using Unity.AutoLOD.Utilities;
+using UnityEditor;
 using UnityEngine;
 
-namespace UnityEditor.Experimental.AutoLOD
+namespace Unity.AutoLOD
 {
     public class GridPlacementUtility : EditorWindow
     {

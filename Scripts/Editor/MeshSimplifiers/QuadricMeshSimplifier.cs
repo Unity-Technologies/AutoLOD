@@ -1,9 +1,9 @@
-﻿using UnityEngine;
+﻿using Unity.AutoLOD;
+using UnityEngine;
 using UnityMeshSimplifier;
-using UnityEngine.Experimental.AutoLOD;
-using Mesh = UnityEngine.Experimental.AutoLOD.WorkingMesh;
+using Mesh = Unity.AutoLOD.WorkingMesh;
 
-namespace UnityEditor.Experimental.AutoLOD
+namespace Unity.AutoLOD
 {
     public class QuadricMeshSimplifier : IMeshSimplifier
     {

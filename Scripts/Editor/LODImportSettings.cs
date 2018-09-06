@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace UnityEditor.Experimental.AutoLOD
+namespace Unity.AutoLOD
 {
     [Serializable]
     public class LODImportSettings

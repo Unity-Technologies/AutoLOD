@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Experimental.AutoLOD;
-using Mesh = UnityEngine.Experimental.AutoLOD.WorkingMesh;
+using Mesh = Unity.AutoLOD.WorkingMesh;
 
-namespace UnityEditor.Experimental.AutoLOD
+namespace Unity.AutoLOD
 {
     public class SimulatedMeshSimplifier : IMeshSimplifier
     {

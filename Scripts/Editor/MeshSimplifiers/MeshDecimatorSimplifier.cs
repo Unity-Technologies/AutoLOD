@@ -4,7 +4,7 @@ using MeshDecimator;
 using MeshDecimator.Algorithms;
 using MeshDecimator.Math;
 using UnityEngine;
-using UnityEngine.Experimental.AutoLOD;
+using Unity.AutoLOD;
 using DMesh = MeshDecimator.Mesh;
 using DVector2 = MeshDecimator.Math.Vector2;
 using DVector3 = MeshDecimator.Math.Vector3;
@@ -12,9 +12,15 @@ using DVector4 = MeshDecimator.Math.Vector4;
 using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
 using Vector4 = UnityEngine.Vector4;
-using WMesh = UnityEngine.Experimental.AutoLOD.WorkingMesh;
+using WMesh = Unity.AutoLOD.WorkingMesh;
+#endif
 
-namespace UnityEditor.Experimental.AutoLOD
+#if UNITY_2017_3_OR_NEWER
+[assembly: Unity.AutoLOD.OptionalDependency("MeshDecimator.MeshDecimation", "ENABLE_MESHDECIMATOR")]
+#endif
+
+#if ENABLE_MESHDECIMATOR
+namespace Unity.AutoLOD
 {
     public class MeshDecimatorSimplifier : IMeshSimplifier
     {
@@ -293,6 +299,4 @@ namespace UnityEditor.Experimental.AutoLOD
         }
     }
 }
-#elif UNITY_2017_3_OR_NEWER
-    [assembly: UnityEditor.Experimental.AutoLOD.OptionalDependency("MeshDecimator.MeshDecimation", "ENABLE_MESHDECIMATOR")]
 #endif

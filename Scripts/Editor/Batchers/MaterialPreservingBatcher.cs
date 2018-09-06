@@ -1,8 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
-using UnityEngine.Experimental.AutoLOD;
 
-namespace UnityEditor.Experimental.AutoLOD
+namespace Unity.AutoLOD
 {
     /// <summary>
     /// A batcher that preserves materials when combining meshes (does not reduce draw calls)

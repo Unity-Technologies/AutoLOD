@@ -1,8 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using UnityEngine;
+using Debug = UnityEngine.Debug;
 
-namespace UnityEngine.Experimental.AutoLOD
+namespace Unity.AutoLOD
 {
     public class TimedEnumerator : IEnumerator
     {

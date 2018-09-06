@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace UnityEditor.Experimental.AutoLOD
+namespace Unity.AutoLOD
 {
     [CreateAssetMenu(fileName = "TextureAtlas", menuName = "AutoLOD/Texture Atlas")]
     public class TextureAtlas : ScriptableObject

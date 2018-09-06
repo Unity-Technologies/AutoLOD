@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace UnityEngine.Experimental.AutoLOD
+namespace Unity.AutoLOD
 {
     public static class IEnumeratorExtensions
     {

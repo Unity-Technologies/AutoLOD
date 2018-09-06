@@ -1,8 +1,9 @@
 ﻿// From: https://github.com/Unity-Technologies/EditorVR
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
-namespace UnityEditor.Experimental.AutoLOD.Utilities
+namespace Unity.AutoLOD.Utilities
 {
 	static class TagManager
 	{
