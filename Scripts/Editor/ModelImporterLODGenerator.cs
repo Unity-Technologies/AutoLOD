@@ -134,6 +134,7 @@ namespace Unity.AutoLOD
                             lodTransform.parent = mf.transform;
                             lodTransform.localPosition = Vector3.zero;
                             lodTransform.localRotation = Quaternion.identity;
+                            lodTransform.localScale = new Vector3(1, 1, 1);
 
                             var lodMF = lodTransform.GetComponent<MeshFilter>();
                             var lodRenderer = lodTransform.GetComponent<MeshRenderer>();
