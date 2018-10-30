@@ -31,9 +31,17 @@ namespace Unity.AutoLOD
             public Type meshSimplifierType;
         }
 
+        public static bool IsEditable(string assetPath)
+        {
+            var attributes = File.GetAttributes(assetPath);
+
+            return AssetDatabase.IsOpenForEdit(assetPath, StatusQueryOptions.ForceUpdate)
+                && (attributes & FileAttributes.ReadOnly) == 0;
+        }
+
         void OnPostprocessModel(GameObject go)
         {
-            if (!go.GetComponentInChildren<LODGroup>() && meshSimplifierType != null)
+            if (!go.GetComponentInChildren<LODGroup>() && meshSimplifierType != null && IsEditable(assetPath))
             {
                 if (go.GetComponentsInChildren<SkinnedMeshRenderer>().Any())
                 {
