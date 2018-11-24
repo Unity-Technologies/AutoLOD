@@ -591,7 +591,12 @@ namespace Unity.AutoLOD
 #if !MIN_REQUIRED_VERSION
             // Max execution time
             {
-                var label = "Max Execution Time (ms)";
+                var label = new GUIContent("Max Execution Time (ms)",
+                    "One of the features of AutoLOD is to keep the editor running responsively, so it’s possible to set"
+                    + "the max execution time for coroutines that run. AutLOD will spawn LOD generators on separate "
+                    + "threads, however, some generators may require main thread usage for accessing non thread-safe "
+                    + "Unity data structures and classes.");
+
                 if (maxExecutionTime == 0)
                 {
                     EditorGUILayout.BeginHorizontal();
@@ -616,10 +621,15 @@ namespace Unity.AutoLOD
                 var type = meshSimplifierType;
                 if (type != null)
                 {
+                    var label = new GUIContent("Default Mesh Simplifier", "All simplifiers (IMeshSimplifier) are "
+                        + "enumerated and provided here for selection. By allowing for multiple implementations, "
+                        + "different approaches can be compared. The default mesh simplifier is used to generate LODs "
+                        + "on import and when explicitly called.");
+
                     var meshSimplifiers = ObjectUtils.GetImplementationsOfInterface(typeof(IMeshSimplifier)).ToList();
                     var displayedOptions = meshSimplifiers.Select(t => t.Name).ToArray();
                     EditorGUI.BeginChangeCheck();
-                    var selected = EditorGUILayout.Popup("Default Mesh Simplifier", Array.IndexOf(displayedOptions, type.Name), displayedOptions);
+                    var selected = EditorGUILayout.Popup(label, Array.IndexOf(displayedOptions, type.Name), displayedOptions);
                     if (EditorGUI.EndChangeCheck())
                         meshSimplifierType = meshSimplifiers[selected];
                 }
@@ -634,10 +644,15 @@ namespace Unity.AutoLOD
                 var type = batcherType;
                 if (type != null)
                 {
+                    var label = new GUIContent("Default Batcher", "All simplifiers (IMeshSimplifier) are "
+                        + "enumerated and provided here for selection. By allowing for multiple implementations, "
+                        + "different approaches can be compared. The default batcher is used in HLOD generation when "
+                        + "combining objects that are located within the same LODVolume.");
+
                     var batchers = ObjectUtils.GetImplementationsOfInterface(typeof(IBatcher)).ToList();
                     var displayedOptions = batchers.Select(t => t.Name).ToArray();
                     EditorGUI.BeginChangeCheck();
-                    var selected = EditorGUILayout.Popup("Default Batcher", Array.IndexOf(displayedOptions, type.Name), displayedOptions);
+                    var selected = EditorGUILayout.Popup(label, Array.IndexOf(displayedOptions, type.Name), displayedOptions);
                     if (EditorGUI.EndChangeCheck())
                         batcherType = batchers[selected];
                 }
@@ -649,25 +664,36 @@ namespace Unity.AutoLOD
 
             // Max LOD
             {
+                var label = new GUIContent("Maximum LOD Generated", "Controls the depth of the generated LOD chain");
+
                 var maxLODValues = Enumerable.Range(0, LODData.MaxLOD + 1).ToArray();
                 EditorGUI.BeginChangeCheck();
-                int maxLODGenerated = EditorGUILayout.IntPopup("Maximum LOD Generated", maxLOD, maxLODValues.Select(v => v.ToString()).ToArray(), maxLODValues);
+                int maxLODGenerated = EditorGUILayout.IntPopup(label, maxLOD,
+                    maxLODValues.Select(v => new GUIContent(v.ToString())).ToArray(), maxLODValues);
                 if (EditorGUI.EndChangeCheck())
                     maxLOD = maxLODGenerated;
             }
 
             // Control LOD0 maximum poly count
             {
+                var label = new GUIContent("Initial LOD Max Poly Count", "In the case where non realtime-ready assets "
+                    + "are brought into Unity these would normally perform poorly. Being able to set a max poly count "
+                    + "for LOD0 allows even the largest of meshes to import with performance-minded defaults.");
+
                 EditorGUI.BeginChangeCheck();
-                var maxPolyCount = EditorGUILayout.IntField("Initial LOD Max Poly Count", initialLODMaxPolyCount);
+                var maxPolyCount = EditorGUILayout.IntField(label, initialLODMaxPolyCount);
                 if (EditorGUI.EndChangeCheck())
                     initialLODMaxPolyCount = maxPolyCount;
             }
 
             // Generate LODs on import
             {
+                var label = new GUIContent("Generate on Import", "Controls whether automatic LOD generation will happen "
+                    + "on import. Even if this option is disabled it is still possible to generate LOD chains "
+                    + "individually on individual files.");
+
                 EditorGUI.BeginChangeCheck();
-                var generateLODsOnImport = EditorGUILayout.Toggle("Generate on Import", generateOnImport);
+                var generateLODsOnImport = EditorGUILayout.Toggle(label, generateOnImport);
                 if (EditorGUI.EndChangeCheck())
                     generateOnImport = generateLODsOnImport;
             }
@@ -685,16 +711,22 @@ namespace Unity.AutoLOD
 
             // Use SceneLOD?
             {
+                var label = new GUIContent("Scene LOD", "Enable Hierarchical LOD (HLOD) support for scenes, "
+                    + "which will automatically generate and stay updated in the background.");
+
                 EditorGUI.BeginChangeCheck();
-                var enabled = EditorGUILayout.Toggle("Scene LOD", sceneLODEnabled);
+                var enabled = EditorGUILayout.Toggle(label, sceneLODEnabled);
                 if (EditorGUI.EndChangeCheck())
                     sceneLODEnabled = enabled;
 
                 if (sceneLODEnabled)
                 {
+                    label = new GUIContent("Show Volume Bounds", "This will display the bounds visually of the bounding "
+                        + "volume hierarchy (currently an Octree)");
+
                     EditorGUI.indentLevel++;
                     EditorGUI.BeginChangeCheck();
-                    var showBounds = EditorGUILayout.Toggle("Show Volume Bounds", showVolumeBounds);
+                    var showBounds = EditorGUILayout.Toggle(label, showVolumeBounds);
                     if (EditorGUI.EndChangeCheck())
                         showVolumeBounds = showBounds;
 
