@@ -22,13 +22,9 @@ namespace Unity.AutoLOD
 
         public static WorkingMesh ToWorkingMesh(this Mesh mesh, Allocator allocator)
         {
-            var wm = new WorkingMesh(allocator, mesh.vertexCount, mesh.GetTriangleCount(), mesh.subMeshCount, mesh.bindposes.Length);
-            mesh.ApplyToWorkingMesh(ref wm);
-            return wm;
-        }
+            var bindposes = mesh.bindposes;
+            var wm = new WorkingMesh(allocator, mesh.vertexCount, mesh.GetTriangleCount(), mesh.subMeshCount, bindposes.Length);
 
-        public static void ApplyToWorkingMesh(this Mesh mesh, ref WorkingMesh wm)
-        {
             wm.indexFormat = mesh.indexFormat;
             wm.vertices = mesh.vertices;
             wm.normals = mesh.normals;
@@ -39,7 +35,7 @@ namespace Unity.AutoLOD
             wm.uv4 = mesh.uv4;
             wm.colors = mesh.colors;
             wm.boneWeights = mesh.boneWeights;
-            wm.bindposes = mesh.bindposes;
+            wm.bindposes = bindposes;
             wm.subMeshCount = mesh.subMeshCount;
             for (int i = 0; i < mesh.subMeshCount; i++)
             {
@@ -47,6 +43,8 @@ namespace Unity.AutoLOD
             }
             wm.name = mesh.name;
             wm.bounds = mesh.bounds;
+
+            return wm;
         }
     }
 
@@ -85,7 +83,7 @@ namespace Unity.AutoLOD
         public int vertexCount
         {
             get => m_Counts[(int)Channel.Vertices];
-            set => m_Counts[(int)Channel.Vertices] = value;
+            private set => m_Counts[(int)Channel.Vertices] = value;
         }
 
         public int[] triangles
