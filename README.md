@@ -24,10 +24,10 @@ Experimental means this:
 - [LODGroupExtensions](Scripts/Extensions/LODGroupExtensions.cs) - useful extension methods (e.g. GetCurrentLOD)
 - [TimedEnumerator](Scripts/Helpers/TimedEnumerator.cs) -  a way to control maximum execution time of coroutines
 - [TextureAtlasModule](Scripts/Editor/TextureAtlasModule.cs) - automatically generate texture atlases
-- [WorkingMesh](Scripts/Helpers/WorkingMesh.cs) - a thread-safe mesh class
+- [WorkingMesh](Scripts/Helpers/WorkingMesh.cs) - a thread-safe mesh (_and now job-friendly!_) struct
 
 ## Evaluating
-Unity 2017.3 or a later version is required
+Unity 2018.1 or a later version is required
 
 ### Git Dependencies
 - [git-lfs](https://git-lfs.github.com/)

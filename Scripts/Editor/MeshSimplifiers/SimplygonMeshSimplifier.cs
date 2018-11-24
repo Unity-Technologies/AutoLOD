@@ -117,7 +117,7 @@ namespace Unity.AutoLOD
                 if (!isMainThread)
                     Thread.Sleep(100);
             }
-        
+
             MonoBehaviourHelper.ExecuteOnMainThread(() =>
             {
                 var customDataType = assembly.GetType("Simplygon.Cloud.Yoda.IntegrationClient.CloudJob+CustomData");
@@ -125,10 +125,10 @@ namespace Unity.AutoLOD
                 var jobCustomDataProperty = cloudJobType.GetProperty("JobCustomData");
                 var jobCustomData = jobCustomDataProperty.GetValue(job.CloudJob, null);
                 var jobFolderName = pendingFolderNameProperty.GetValue(jobCustomData, null) as string;
-            
+
                 var lodAssetDir = "Assets/LODs/" + job.AssetDirectory;
                 var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(string.Format("{0}/{1}_LOD1.prefab", lodAssetDir, jobName));
-                mesh.ApplyToWorkingMesh(outputMesh);
+                mesh.ApplyToWorkingMesh(ref outputMesh);
 
                 //job.CloudJob.StateHandler.RequestJobDeletion();
                 AssetDatabaseEx.DeletePendingLODFolder(jobFolderName);

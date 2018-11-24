@@ -1,11 +1,9 @@
-﻿//#define SINGLE_THREADED
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using Unity.AutoLOD;
+using Unity.Collections;
+using Unity.Jobs;
 using UnityEditor;
 using UnityEngine;
 using UnityObject = UnityEngine.Object;
@@ -14,6 +12,7 @@ namespace Unity.AutoLOD
 {
     public class ModelImporterLODGenerator : AssetPostprocessor
     {
+        public static bool saveAssets { set; get; }
         public static bool enabled { set; get; }
         public static Type meshSimplifierType { set; get; }
         public static int maxLOD { set; get; }
@@ -22,14 +21,6 @@ namespace Unity.AutoLOD
         const HideFlags k_DefaultHideFlags = HideFlags.None;
 
         static List<string> s_ModelAssetsProcessed = new List<string>();
-
-        struct MeshLOD
-        {
-            public Mesh inputMesh;
-            public Mesh outputMesh;
-            public float quality;
-            public Type meshSimplifierType;
-        }
 
         public static bool IsEditable(string assetPath)
         {
@@ -190,12 +181,30 @@ namespace Unity.AutoLOD
                             EditorUtility.SetDirty(lodData);
                         }
                         meshLODs.ForEach(ml => AssetDatabase.AddObjectToAsset(ml.outputMesh, lodData));
-                        AssetDatabase.SaveAssets();
+                        if (saveAssets)
+                            AssetDatabase.SaveAssets();
 
+                        // Process dependencies first
+                        var jobDependencies = new NativeArray<JobHandle>(preprocessMeshes.Count, Allocator.Temp);
+                        var i = 0;
+                        meshLODs.RemoveAll(ml =>
+                        {
+                            if (preprocessMeshes.Contains(ml.outputMesh.GetInstanceID()))
+                            {
+                                jobDependencies[i++] = ml.Generate();
+                                return true;
+                            }
+
+                            return false;
+                        });
+
+                        // Process remaining meshes
                         foreach (var ml in meshLODs)
                         {
-                            GenerateMeshLOD(ml, preprocessMeshes);
+                            ml.Generate(jobDependencies);
                         }
+
+                        jobDependencies.Dispose();
                     }
                 }
                 else
@@ -288,7 +297,7 @@ namespace Unity.AutoLOD
 
         static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
-            bool saveAssets = false;
+            bool assetsImported = false;
 
             foreach (var asset in importedAssets)
             {
@@ -306,11 +315,11 @@ namespace Unity.AutoLOD
                     }
 
                     EditorUtility.SetDirty(lodData);
-                    saveAssets = true;
+                    assetsImported = true;
                 }
             }
 
-            if (saveAssets)
+            if (assetsImported && saveAssets)
                 AssetDatabase.SaveAssets();
         }
 
@@ -344,66 +353,6 @@ namespace Unity.AutoLOD
             }
 
             return lodData;
-        }
-
-        static void GenerateMeshLOD(MeshLOD meshLOD, HashSet<int> preprocessMeshes)
-        {
-            // A NOP to make sure we have an instance before launching into threads that may need to execute on the main thread
-            MonoBehaviourHelper.ExecuteOnMainThread(() => { });
-
-            WorkingMesh inputMesh = null;
-            var inputMeshID = meshLOD.inputMesh.GetInstanceID();
-            if (!preprocessMeshes.Contains(inputMeshID))
-                inputMesh = meshLOD.inputMesh.ToWorkingMesh();
-
-            var meshSimplifier = (IMeshSimplifier)Activator.CreateInstance(meshLOD.meshSimplifierType);
-#if !SINGLE_THREADED
-            var worker = new BackgroundWorker();
-            worker.DoWork += (sender, args) =>
-            {
-                // If this mesh is dependent on another mesh, then let it complete first
-                if (inputMesh == null)
-                {
-                    while (preprocessMeshes.Contains(inputMeshID))
-                        Thread.Sleep(100);
-
-                    MonoBehaviourHelper.ExecuteOnMainThread(() => inputMesh = meshLOD.inputMesh.ToWorkingMesh());
-                }
-#endif
-
-                var outputMesh = new WorkingMesh();
-#if UNITY_2017_3_OR_NEWER
-                outputMesh.indexFormat = inputMesh.indexFormat;
-#endif
-                meshSimplifier.Simplify(inputMesh, outputMesh, meshLOD.quality);
-#if !SINGLE_THREADED
-                args.Result = outputMesh;
-            };
-#endif
-
-#if !SINGLE_THREADED
-            worker.RunWorkerCompleted += (sender, args) =>
-#endif
-            {
-                var outMesh = meshLOD.outputMesh;
-                Debug.Log("Completed LOD " + outMesh.name);
-#if !SINGLE_THREADED
-                var resultMesh = (WorkingMesh)args.Result;
-#else
-                var resultMesh = outputMesh;
-#endif
-                resultMesh.name = outMesh.name;
-                resultMesh.ApplyToMesh(outMesh);
-                outMesh.RecalculateBounds();
-
-                var outputMeshID = outMesh.GetInstanceID();
-                if (preprocessMeshes.Remove(outputMeshID))
-                    Debug.Log("Pre-process mesh complete: " + outputMeshID);
-            };
-
-#if !SINGLE_THREADED
-            worker.RunWorkerAsync();
-#endif
         }
 
         static void AppendLODNameToRenderers(Transform root, int lod)

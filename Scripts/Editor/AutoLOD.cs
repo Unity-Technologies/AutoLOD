@@ -1,7 +1,10 @@
-﻿using System;
+﻿#if !UNITY_2018_1_OR_NEWER
+#define MIN_REQUIRED_VERSION
+#endif
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using Unity.AutoLOD.Utilities;
@@ -14,6 +17,8 @@ namespace Unity.AutoLOD
     [InitializeOnLoad]
     class AutoLOD
     {
+        const string k_MinimumRequiredVersion = "AutoLOD requires Unity 2018.1 or a later version";
+
         const HideFlags k_DefaultHideFlags = HideFlags.None;
         const string k_MaxExecutionTime = "AutoLOD.MaxExecutionTime";
         const int k_DefaultMaxExecutionTime = 8;
@@ -23,10 +28,12 @@ namespace Unity.AutoLOD
         const string k_MaxLOD = "AutoLOD.MaxLOD";
         const int k_DefaultMaxLOD = 2;
         const string k_GenerateOnImport = "AutoLOD.GenerateOnImport";
+        const string k_SaveAssets = "AutoLOD.SaveAssets";
         const string k_InitialLODMaxPolyCount = "AutoLOD.InitialLODMaxPolyCount";
         const int k_DefaultInitialLODMaxPolyCount = 500000;
         const string k_SceneLODEnabled = "AutoLOD.SceneLODEnabled";
         const string k_ShowVolumeBounds = "AutoLOD.ShowVolumeBounds";
+
 
         static int maxExecutionTime
         {
@@ -100,6 +107,16 @@ namespace Unity.AutoLOD
             get { return EditorPrefs.GetBool(k_GenerateOnImport, true); }
         }
 
+        static bool saveAssets
+        {
+            get { return EditorPrefs.GetBool(k_SaveAssets, true); }
+            set
+            {
+                EditorPrefs.SetBool(k_SaveAssets, value);
+                UpdateDependencies();
+            }
+        }
+
         static int initialLODMaxPolyCount
         {
             set
@@ -135,7 +152,7 @@ namespace Unity.AutoLOD
 
         static void UpdateDependencies()
         {
-#if UNITY_2017_3_OR_NEWER
+#if !MIN_REQUIRED_VERSION
             MonoBehaviourHelper.maxSharedExecutionTimeMS = maxExecutionTime == 0 ? Mathf.Infinity : maxExecutionTime;
 
             LODDataEditor.meshSimplifier = meshSimplifierType.AssemblyQualifiedName;
@@ -147,6 +164,7 @@ namespace Unity.AutoLOD
             LODVolume.batcherType = batcherType;
             LODVolume.drawBounds = sceneLODEnabled && showVolumeBounds;
 
+            ModelImporterLODGenerator.saveAssets = saveAssets;
             ModelImporterLODGenerator.meshSimplifierType = meshSimplifierType;
             ModelImporterLODGenerator.maxLOD = maxLOD;
             ModelImporterLODGenerator.enabled = generateOnImport;
@@ -169,10 +187,10 @@ namespace Unity.AutoLOD
 
         static AutoLOD()
         {
-#if UNITY_2017_3_OR_NEWER
+#if !MIN_REQUIRED_VERSION
             UpdateDependencies();
 #else
-            Debug.LogWarning("AutoLOD requires Unity 2017.3 or a later version");
+            Debug.LogWarning(k_MinimumRequiredVersion);
 #endif
         }
 
@@ -482,27 +500,12 @@ namespace Unity.AutoLOD
                         lodMF.sharedMesh = simplifiedMesh;
                         meshes.Add(simplifiedMesh);
 
-                        var worker = new BackgroundWorker();
-
-                        var index = l;
-                        var inputMesh = sharedMesh.ToWorkingMesh();
-                        var outputMesh = simplifiedMesh.ToWorkingMesh();
-
-                        var meshSimplifier = (IMeshSimplifier)Activator.CreateInstance(meshSimplifierType);
-                        worker.DoWork += (sender, args) =>
-                        {
-                            meshSimplifier.Simplify(inputMesh, outputMesh, Mathf.Pow(0.5f, index));
-                            args.Result = outputMesh;
-                        };
-
-                        worker.RunWorkerCompleted += (sender, args) =>
-                        {
-                            var resultMesh = (WorkingMesh)args.Result;
-                            resultMesh.ApplyToMesh(simplifiedMesh);
-                            simplifiedMesh.RecalculateBounds();
-                        };
-
-                        worker.RunWorkerAsync();
+                        MeshLOD meshLOD = new MeshLOD();
+                        meshLOD.inputMesh = sharedMesh;
+                        meshLOD.outputMesh = simplifiedMesh;
+                        meshLOD.quality = Mathf.Pow(0.5f, l);
+                        meshLOD.meshSimplifierType = meshSimplifierType;
+                        meshLOD.Generate();
                     }
 
                     var lod = lods[l];
@@ -585,7 +588,7 @@ namespace Unity.AutoLOD
             EditorGUILayout.BeginVertical();
             EditorGUILayout.Space();
 
-#if UNITY_2017_3_OR_NEWER
+#if !MIN_REQUIRED_VERSION
             // Max execution time
             {
                 var label = "Max Execution Time (ms)";
@@ -604,7 +607,7 @@ namespace Unity.AutoLOD
                     var maxTime = EditorGUILayout.IntSlider(label, maxExecutionTime, 0, 15);
                     if (EditorGUI.EndChangeCheck())
                         maxExecutionTime = maxTime;
-                    
+
                 }
             }
 
@@ -669,6 +672,17 @@ namespace Unity.AutoLOD
                     generateOnImport = generateLODsOnImport;
             }
 
+            // Turn off/on saving assets (performance feature
+            {
+                var label = new GUIContent("Save Assets",
+                    "This can speed up performance, but may cause errors with some simplifiers");
+                EditorGUI.BeginChangeCheck();
+                var saveAssetsOnImport = EditorGUILayout.Toggle(label, saveAssets);
+                if (EditorGUI.EndChangeCheck())
+                    saveAssets = saveAssetsOnImport;
+            }
+
+
             // Use SceneLOD?
             {
                 EditorGUI.BeginChangeCheck();
@@ -696,7 +710,7 @@ namespace Unity.AutoLOD
                 }
             }
 #else
-            EditorGUILayout.HelpBox("AutoLOD requires Unity 2017.3 or a later version", MessageType.Warning);
+            EditorGUILayout.HelpBox(k_MinimumRequiredVersion, MessageType.Warning);
 #endif
 
             EditorGUILayout.EndVertical();

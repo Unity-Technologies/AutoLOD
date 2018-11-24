@@ -122,7 +122,7 @@ namespace Unity.AutoLOD
                     vectors[i] = new Vector3((float)v.x, (float)v.y, (float)v.z);
                 }
             }
-            
+
             return vectors;
         }
 
@@ -194,7 +194,7 @@ namespace Unity.AutoLOD
         DMesh ToMeshDecimatorMesh(WMesh mesh, out int totalTriangleCount)
         {
             var vertices = ToVector3d(mesh.vertices);
-        
+
             int subMeshCount = mesh.subMeshCount;
             var meshNormals = mesh.normals;
             var meshTangents = mesh.tangents;
