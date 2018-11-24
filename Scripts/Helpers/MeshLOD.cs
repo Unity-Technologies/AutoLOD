@@ -41,7 +41,7 @@ namespace Unity.AutoLOD
         IEnumerator UpdateMesh(JobHandle jobHandle, GenerateMeshLODJob job)
         {
             while (!jobHandle.IsCompleted)
-                yield return null;
+                yield return new WaitForSecondsRealtime(0.5f);
 
             jobHandle.Complete();
 
