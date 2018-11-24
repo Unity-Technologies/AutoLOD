@@ -2,12 +2,17 @@
     "name": "AutoLOD-Editor",
     "references": [
         "AutoLOD",
-        "UnityMeshSimplifier"
+        "UnityMeshSimplifier",
+        "geometry3Sharp"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [
         "Editor"
     ],
     "excludePlatforms": [],
-    "allowUnsafeCode": false
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
 }
