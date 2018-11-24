@@ -12,6 +12,7 @@ namespace Unity.AutoLOD
 {
     public class ModelImporterLODGenerator : AssetPostprocessor
     {
+        public static bool saveAssets { set; get; }
         public static bool enabled { set; get; }
         public static Type meshSimplifierType { set; get; }
         public static int maxLOD { set; get; }
@@ -180,7 +181,8 @@ namespace Unity.AutoLOD
                             EditorUtility.SetDirty(lodData);
                         }
                         meshLODs.ForEach(ml => AssetDatabase.AddObjectToAsset(ml.outputMesh, lodData));
-                        AssetDatabase.SaveAssets();
+                        if (saveAssets)
+                            AssetDatabase.SaveAssets();
 
                         // Process dependencies first
                         var jobDependencies = new NativeArray<JobHandle>(preprocessMeshes.Count, Allocator.Temp);
@@ -295,7 +297,7 @@ namespace Unity.AutoLOD
 
         static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
-            bool saveAssets = false;
+            bool assetsImported = false;
 
             foreach (var asset in importedAssets)
             {
@@ -313,11 +315,11 @@ namespace Unity.AutoLOD
                     }
 
                     EditorUtility.SetDirty(lodData);
-                    saveAssets = true;
+                    assetsImported = true;
                 }
             }
 
-            if (saveAssets)
+            if (assetsImported && saveAssets)
                 AssetDatabase.SaveAssets();
         }
 
