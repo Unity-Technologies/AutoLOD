@@ -24,7 +24,7 @@ namespace Unity.AutoLOD
 {
     public class MeshDecimatorSimplifier : IMeshSimplifier
     {
-        public void Simplify(ref WMesh inputMesh, ref WMesh outputMesh, float quality)
+        public void Simplify(WMesh inputMesh, WMesh outputMesh, float quality)
         {
             var enableLogging = false;
             int totalTriangleCount;

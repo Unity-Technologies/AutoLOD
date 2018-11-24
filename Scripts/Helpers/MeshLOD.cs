@@ -27,7 +27,7 @@ namespace Unity.AutoLOD
                 var typeName = Encoding.UTF8.GetString(meshSimplifierTypeName.ToArray());
                 var meshSimplifierType = Type.GetType(typeName);
                 var meshSimplifier = (IMeshSimplifier)Activator.CreateInstance(meshSimplifierType);
-                meshSimplifier.Simplify(ref inputMesh, ref outputMesh, quality);
+                meshSimplifier.Simplify(inputMesh, outputMesh, quality);
             }
 
             public void Dispose()
@@ -54,7 +54,7 @@ namespace Unity.AutoLOD
             job.Dispose();
         }
 
-        public JobHandle Generate(NativeArray<JobHandle> jobDependencies = default)
+        public JobHandle Generate(NativeArray<JobHandle>? jobDependencies = null)
         {
             // A NOP to make sure we have an instance before launching into threads that may need to execute on the main thread
             MonoBehaviourHelper.ExecuteOnMainThread(() => { });
@@ -67,7 +67,12 @@ namespace Unity.AutoLOD
             job.outputMesh = new WorkingMesh(Allocator.Persistent, inputMesh.vertexCount, inputMesh.GetTriangleCount(),
                 inputMesh.subMeshCount, inputMesh.blendShapeCount);
 
-            var jobHandle = job.Schedule(JobHandle.CombineDependencies(jobDependencies));
+            JobHandle jobHandle;
+            if (jobDependencies.HasValue)
+                jobHandle = job.Schedule(JobHandle.CombineDependencies(jobDependencies.Value));
+            else
+                jobHandle = job.Schedule();
+
             MonoBehaviourHelper.StartCoroutine(UpdateMesh(jobHandle, job));
 
             return jobHandle;

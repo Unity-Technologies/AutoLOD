@@ -27,7 +27,7 @@ namespace Unity.AutoLOD
     {
         static object executionLock = new object();
 
-        public void Simplify(ref WorkingMesh inputMesh, ref WorkingMesh outputMesh, float quality)
+        public void Simplify(WorkingMesh inputMesh, WorkingMesh outputMesh, float quality)
         {
             var isMainThread = MonoBehaviourHelper.IsMainThread();
 
@@ -128,7 +128,7 @@ namespace Unity.AutoLOD
 
                 var lodAssetDir = "Assets/LODs/" + job.AssetDirectory;
                 var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(string.Format("{0}/{1}_LOD1.prefab", lodAssetDir, jobName));
-                mesh.ApplyToWorkingMesh(outputMesh);
+                mesh.ApplyToWorkingMesh(ref outputMesh);
 
                 //job.CloudJob.StateHandler.RequestJobDeletion();
                 AssetDatabaseEx.DeletePendingLODFolder(jobFolderName);

@@ -24,7 +24,15 @@ namespace Unity.AutoLOD
         {
             var bindposes = mesh.bindposes;
             var wm = new WorkingMesh(allocator, mesh.vertexCount, mesh.GetTriangleCount(), mesh.subMeshCount, bindposes.Length);
+            mesh.ApplyToWorkingMesh(ref wm, bindposes);
 
+            return wm;
+        }
+
+        // Taking bindposes optional parameter is ugly, but saves an additional array allocation if it was already
+        // accessed to get the length
+        public static void ApplyToWorkingMesh(this Mesh mesh, ref WorkingMesh wm, Matrix4x4[] bindposes = null)
+        {
             wm.indexFormat = mesh.indexFormat;
             wm.vertices = mesh.vertices;
             wm.normals = mesh.normals;
@@ -35,7 +43,7 @@ namespace Unity.AutoLOD
             wm.uv4 = mesh.uv4;
             wm.colors = mesh.colors;
             wm.boneWeights = mesh.boneWeights;
-            wm.bindposes = bindposes;
+            wm.bindposes = bindposes ?? mesh.bindposes;
             wm.subMeshCount = mesh.subMeshCount;
             for (int i = 0; i < mesh.subMeshCount; i++)
             {
@@ -43,8 +51,6 @@ namespace Unity.AutoLOD
             }
             wm.name = mesh.name;
             wm.bounds = mesh.bounds;
-
-            return wm;
         }
     }
 
@@ -72,7 +78,10 @@ namespace Unity.AutoLOD
 
         public Vector3[] vertices
         {
-            get => m_Vertices.Slice(0, vertexCount).ToArray();
+            get
+            {
+                return m_Vertices.Slice(0, vertexCount).ToArray();
+            }
             set
             {
                 vertexCount = value.Length;
@@ -82,30 +91,30 @@ namespace Unity.AutoLOD
         NativeArray<Vector3> m_Vertices;
         public int vertexCount
         {
-            get => m_Counts[(int)Channel.Vertices];
-            private set => m_Counts[(int)Channel.Vertices] = value;
+            get { return m_Counts[(int)Channel.Vertices]; }
+            private set { m_Counts[(int)Channel.Vertices] = value; }
         }
 
         public int[] triangles
         {
-            get => m_SubmeshTriangles.Slice(0, submeshTrianglesCount).ToArray();
+            get { return m_Triangles.Slice(0, trianglesCount).ToArray(); }
             set
             {
                 subMeshCount = 1;
-                submeshTrianglesCount = value.Length;
+                trianglesCount = value.Length;
                 SetTriangles(value, 0);
             }
         }
-        NativeArray<int> m_SubmeshTriangles;
-        int submeshTrianglesCount
+        NativeArray<int> m_Triangles;
+        int trianglesCount
         {
-            get => m_Counts[(int)Channel.Triangles];
-            set => m_Counts[(int)Channel.Triangles] = value;
+            get { return m_Counts[(int)Channel.Triangles]; }
+            set { m_Counts[(int)Channel.Triangles] = value; }
         }
 
         public Vector3[] normals
         {
-            get => m_Normals.Slice(0, normalsCount).ToArray();
+            get { return m_Normals.Slice(0, normalsCount).ToArray(); }
             set
             {
                 if (value == null || value.Length == 0)
@@ -119,16 +128,17 @@ namespace Unity.AutoLOD
                 }
             }
         }
+
         NativeArray<Vector3> m_Normals;
         int normalsCount
         {
-            get => m_Counts[(int)Channel.Normals];
-            set => m_Counts[(int)Channel.Normals] = value;
+            get { return m_Counts[(int)Channel.Normals]; }
+            set { m_Counts[(int)Channel.Normals] = value; }
         }
 
         public Vector4[] tangents
         {
-            get => m_Tangents.Slice(0, tangentsCount).ToArray();
+            get { return m_Tangents.Slice(0, tangentsCount).ToArray(); }
             set
             {
                 if (value == null || value.Length == 0)
@@ -142,16 +152,17 @@ namespace Unity.AutoLOD
                 }
             }
         }
+
         NativeArray<Vector4> m_Tangents;
         int tangentsCount
         {
-            get => m_Counts[(int)Channel.Tangents];
-            set => m_Counts[(int)Channel.Tangents] = value;
+            get { return m_Counts[(int)Channel.Tangents]; }
+            set { m_Counts[(int)Channel.Tangents] = value; }
         }
 
         public Vector2[] uv
         {
-            get => m_UV.Slice(0, uvCount).ToArray();
+            get { return m_UV.Slice(0, uvCount).ToArray(); }
             set
             {
                 if (value == null || value.Length == 0)
@@ -165,16 +176,17 @@ namespace Unity.AutoLOD
                 }
             }
         }
+
         NativeArray<Vector2> m_UV;
         int uvCount
         {
-            get => m_Counts[(int)Channel.UV];
-            set => m_Counts[(int)Channel.UV] = value;
+            get { return m_Counts[(int)Channel.UV]; }
+            set { m_Counts[(int)Channel.UV] = value; }
         }
 
         public Vector2[] uv2
         {
-            get => m_UV2.Slice(0, uv2Count).ToArray();
+            get { return m_UV2.Slice(0, uv2Count).ToArray(); }
             set
             {
                 if (value == null || value.Length == 0)
@@ -188,16 +200,17 @@ namespace Unity.AutoLOD
                 }
             }
         }
+
         NativeArray<Vector2> m_UV2;
         int uv2Count
         {
-            get => m_Counts[(int)Channel.UV2];
-            set => m_Counts[(int)Channel.UV2] = value;
+            get { return m_Counts[(int)Channel.UV2]; }
+            set { m_Counts[(int)Channel.UV2] = value; }
         }
 
         public Vector2[] uv3
         {
-            get => m_UV3.Slice(0, uv3Count).ToArray();
+            get { return m_UV3.Slice(0, uv3Count).ToArray(); }
             set
             {
                 if (value == null || value.Length == 0)
@@ -211,16 +224,17 @@ namespace Unity.AutoLOD
                 }
             }
         }
+
         NativeArray<Vector2> m_UV3;
         int uv3Count
         {
-            get => m_Counts[(int)Channel.UV3];
-            set => m_Counts[(int)Channel.UV3] = value;
+            get { return m_Counts[(int)Channel.UV3]; }
+            set { m_Counts[(int)Channel.UV3] = value; }
         }
 
         public Vector2[] uv4
         {
-            get => m_UV4.Slice(0, uv4Count).ToArray();
+            get { return m_UV4.Slice(0, uv4Count).ToArray(); }
             set
             {
                 if (value == null || value.Length == 0)
@@ -234,16 +248,17 @@ namespace Unity.AutoLOD
                 }
             }
         }
+
         NativeArray<Vector2> m_UV4;
         int uv4Count
         {
-            get => m_Counts[(int)Channel.UV4];
-            set => m_Counts[(int)Channel.UV4] = value;
+            get { return m_Counts[(int)Channel.UV4]; }
+            set { m_Counts[(int)Channel.UV4] = value; }
         }
 
         public Color[] colors
         {
-            get => m_Colors.Slice(0, colorsCount).ToArray();
+            get { return m_Colors.Slice(0, colorsCount).ToArray(); }
             set
             {
                 if (value == null || value.Length == 0)
@@ -257,11 +272,12 @@ namespace Unity.AutoLOD
                 }
             }
         }
+
         NativeArray<Color> m_Colors;
         int colorsCount
         {
-            get => m_Counts[(int)Channel.Colors];
-            set => m_Counts[(int)Channel.Colors] = value;
+            get { return m_Counts[(int)Channel.Colors]; }
+            set { m_Counts[(int)Channel.Colors] = value; }
         }
 
         public Color32[] colors32
@@ -272,7 +288,7 @@ namespace Unity.AutoLOD
 
         public BoneWeight[] boneWeights
         {
-            get => m_BoneWeights.Slice(0, boneWeightsCount).ToArray();
+            get { return m_BoneWeights.Slice(0, boneWeightsCount).ToArray(); }
             set
             {
                 if (value == null || value.Length == 0)
@@ -286,16 +302,17 @@ namespace Unity.AutoLOD
                 }
             }
         }
+
         NativeArray<BoneWeight> m_BoneWeights;
         int boneWeightsCount
         {
-            get => m_Counts[(int)Channel.BoneWeights];
-            set => m_Counts[(int)Channel.BoneWeights] = value;
+            get { return m_Counts[(int)Channel.BoneWeights]; }
+            set { m_Counts[(int)Channel.BoneWeights] = value; }
         }
 
         public Matrix4x4[] bindposes
         {
-            get => m_Bindposes.Slice(0, bindposesCount).ToArray();
+            get { return m_Bindposes.Slice(0, bindposesCount).ToArray(); }
             set
             {
                 if (value == null || value.Length == 0)
@@ -309,16 +326,17 @@ namespace Unity.AutoLOD
                 }
             }
         }
+
         NativeArray<Matrix4x4> m_Bindposes;
         int bindposesCount
         {
-            get => m_Counts[(int)Channel.Bindposes];
-            set => m_Counts[(int)Channel.Bindposes] = value;
+            get { return m_Counts[(int)Channel.Bindposes]; }
+            set { m_Counts[(int)Channel.Bindposes] = value; }
         }
 
         public int subMeshCount
         {
-            get => submeshOffsetCount;
+            get { return submeshOffsetCount; }
             set
             {
                 if (submeshOffsetCount == value)
@@ -333,16 +351,17 @@ namespace Unity.AutoLOD
                 }
             }
         }
+
         NativeArray<int> m_SubmeshOffset;
         int submeshOffsetCount
         {
-            get => m_Counts[(int)Channel.SubmeshOffset];
-            set => m_Counts[(int)Channel.SubmeshOffset] = value;
+            get { return m_Counts[(int)Channel.SubmeshOffset]; }
+            set { m_Counts[(int)Channel.SubmeshOffset] = value; }
         }
 
         public string name
         {
-            get => Encoding.UTF8.GetString(m_Name.ToArray());
+            get { return Encoding.UTF8.GetString(m_Name.ToArray()); }
             set
             {
                 if (value == null)
@@ -353,6 +372,7 @@ namespace Unity.AutoLOD
                 m_Name.Slice(0, length).CopyFrom(bytes);
             }
         }
+
         NativeArray<byte> m_Name;
 
         // This data does not cross the job threshold, so if it needs to be read back, then it will need to be
@@ -373,63 +393,78 @@ namespace Unity.AutoLOD
             var preSliceLength = m_SubmeshOffset[submesh];
             if (preSliceLength < 0)
             {
-                m_SubmeshOffset[submesh] = 0;
-                preSliceLength = 0;
+                if (submesh > 0)
+                {
+                    m_SubmeshOffset[submesh] = trianglesCount;
+                    preSliceLength = trianglesCount;
+                }
+                else
+                {
+                    m_SubmeshOffset[submesh] = 0;
+                    preSliceLength = 0;
+                }
             }
-            var triangleCount = preSliceLength; // count prior to submesh
-            triangleCount += triangles.Length; // new submesh triangle count
+            var totalCount = preSliceLength; // count prior to submesh
+            totalCount += triangles.Length; // new submesh triangle count
 
             var postSliceOffset = 0;
             var postSliceLength = 0;
             if (submesh < subMeshCount - 2) // count of all triangles after submesh
             {
                 postSliceOffset = m_SubmeshOffset[submesh + 1];
-                postSliceLength = submeshTrianglesCount - postSliceOffset;
-                triangleCount += postSliceLength;
+                if (postSliceOffset >= 0)
+                {
+                    postSliceLength = trianglesCount - postSliceOffset;
+                    totalCount += postSliceLength;
+                }
             }
 
-            submeshTrianglesCount = triangleCount;
+            trianglesCount = totalCount;
 
             // Shift other following triangles up/down
             if (postSliceOffset > 0)
             {
                 var offset = preSliceLength + triangles.Length;
                 m_SubmeshOffset[submesh + 1] = offset;
-                var sourceSlice = new NativeSlice<int>(m_SubmeshTriangles, postSliceOffset, postSliceLength);
-                var destSlice = new NativeSlice<int>(m_SubmeshTriangles, offset, postSliceLength);
+                var sourceSlice = new NativeSlice<int>(m_Triangles, postSliceOffset, postSliceLength);
+                var destSlice = new NativeSlice<int>(m_Triangles, offset, postSliceLength);
                 destSlice.CopyFrom(sourceSlice);
             }
 
-            m_SubmeshTriangles.Slice(preSliceLength, triangles.Length).CopyFrom(triangles);
+            m_Triangles.Slice(preSliceLength, triangles.Length).CopyFrom(triangles);
         }
 
         public int[] GetTriangles(int submesh)
         {
             if (submesh < m_SubmeshOffset.Length)
             {
-                var (start, stop) = GetTriangleRange(submesh);
+                var start = 0;
+                var stop = 0;
+                GetTriangleRange(submesh, out start, out stop);
                 var length = stop - start;
 
-                var slice = new NativeSlice<int>(m_SubmeshTriangles, start, length);
+                var slice = new NativeSlice<int>(m_Triangles, start, length);
                 return slice.ToArray();
             }
 
             return new int[0];
         }
 
-        (int, int) GetTriangleRange(int submesh)
+        void GetTriangleRange(int submesh, out int start, out int stop)
         {
             if (submesh < m_SubmeshOffset.Length)
             {
-                var start = m_SubmeshOffset[submesh];
-                var stop = submeshTrianglesCount;
-                if (submesh < m_SubmeshOffset.Length - 2)
+                start = m_SubmeshOffset[submesh];
+                stop = trianglesCount;
+                if (submesh < m_SubmeshOffset.Length - 1)
                     stop = m_SubmeshOffset[submesh + 1];
 
-                return (start, stop);
+                return;
             }
 
-            return (-1, -1);
+            start = -1;
+            stop = -1;
+            return;
         }
 
         public WorkingMesh(Allocator allocator, int maxVertices, int maxTriangles, int maxSubmeshes, int maxBindposes) : this()
@@ -447,7 +482,7 @@ namespace Unity.AutoLOD
             m_Bindposes = new NativeArray<Matrix4x4>(maxBindposes, allocator);
             m_Name = new NativeArray<byte>(k_MaxNameSize, allocator);
             m_SubmeshOffset = new NativeArray<int>(maxSubmeshes, allocator);
-            m_SubmeshTriangles = new NativeArray<int>(maxTriangles, allocator);
+            m_Triangles = new NativeArray<int>(maxTriangles, allocator);
         }
 
         public void Dispose()
@@ -491,8 +526,8 @@ namespace Unity.AutoLOD
             if (m_SubmeshOffset.IsCreated)
                 m_SubmeshOffset.Dispose();
 
-            if (m_SubmeshTriangles.IsCreated)
-                m_SubmeshTriangles.Dispose();
+            if (m_Triangles.IsCreated)
+                m_Triangles.Dispose();
         }
 
         public void ApplyToMesh(Mesh mesh)
