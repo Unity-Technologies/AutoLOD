@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using Unity.AutoLOD.Utilities;
@@ -482,27 +481,12 @@ namespace Unity.AutoLOD
                         lodMF.sharedMesh = simplifiedMesh;
                         meshes.Add(simplifiedMesh);
 
-                        var worker = new BackgroundWorker();
-
-                        var index = l;
-                        var inputMesh = sharedMesh.ToWorkingMesh();
-                        var outputMesh = simplifiedMesh.ToWorkingMesh();
-
-                        var meshSimplifier = (IMeshSimplifier)Activator.CreateInstance(meshSimplifierType);
-                        worker.DoWork += (sender, args) =>
-                        {
-                            meshSimplifier.Simplify(inputMesh, outputMesh, Mathf.Pow(0.5f, index));
-                            args.Result = outputMesh;
-                        };
-
-                        worker.RunWorkerCompleted += (sender, args) =>
-                        {
-                            var resultMesh = (WorkingMesh)args.Result;
-                            resultMesh.ApplyToMesh(simplifiedMesh);
-                            simplifiedMesh.RecalculateBounds();
-                        };
-
-                        worker.RunWorkerAsync();
+                        MeshLOD meshLOD = new MeshLOD();
+                        meshLOD.inputMesh = sharedMesh;
+                        meshLOD.outputMesh = simplifiedMesh;
+                        meshLOD.quality = Mathf.Pow(0.5f, l);
+                        meshLOD.meshSimplifierType = meshSimplifierType;
+                        meshLOD.Generate();
                     }
 
                     var lod = lods[l];
@@ -604,7 +588,7 @@ namespace Unity.AutoLOD
                     var maxTime = EditorGUILayout.IntSlider(label, maxExecutionTime, 0, 15);
                     if (EditorGUI.EndChangeCheck())
                         maxExecutionTime = maxTime;
-                    
+
                 }
             }
 

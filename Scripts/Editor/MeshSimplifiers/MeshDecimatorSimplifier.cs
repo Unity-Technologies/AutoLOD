@@ -24,7 +24,7 @@ namespace Unity.AutoLOD
 {
     public class MeshDecimatorSimplifier : IMeshSimplifier
     {
-        public void Simplify(WMesh inputMesh, WMesh outputMesh, float quality)
+        public void Simplify(ref WMesh inputMesh, ref WMesh outputMesh, float quality)
         {
             var enableLogging = false;
             int totalTriangleCount;
@@ -122,7 +122,7 @@ namespace Unity.AutoLOD
                     vectors[i] = new Vector3((float)v.x, (float)v.y, (float)v.z);
                 }
             }
-            
+
             return vectors;
         }
 
@@ -194,7 +194,7 @@ namespace Unity.AutoLOD
         DMesh ToMeshDecimatorMesh(WMesh mesh, out int totalTriangleCount)
         {
             var vertices = ToVector3d(mesh.vertices);
-        
+
             int subMeshCount = mesh.subMeshCount;
             var meshNormals = mesh.normals;
             var meshTangents = mesh.tangents;

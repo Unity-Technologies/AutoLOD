@@ -7,7 +7,7 @@ namespace Unity.AutoLOD
 {
     public class SimulatedMeshSimplifier : IMeshSimplifier
     {
-        public void Simplify(Mesh inputMesh, Mesh outputMesh, float quality)
+        public void Simplify(ref Mesh inputMesh, ref Mesh outputMesh, float quality)
         {
             Vector3[] vertices = inputMesh.vertices;
             Vector2[] uv = inputMesh.uv;

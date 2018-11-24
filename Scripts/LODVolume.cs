@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using Unity.AutoLOD;
@@ -646,7 +645,7 @@ public class LODVolume : MonoBehaviour
             sharedMesh.RecalculateBounds();
             var meshFilter = hlodRoot.AddComponent<MeshFilter>();
             meshFilter.sharedMesh = sharedMesh;
-            
+
             var meshRenderer = hlodRoot.AddComponent<MeshRenderer>();
             meshRenderer.sharedMaterial = sharedMaterial;
         }
@@ -672,7 +671,7 @@ public class LODVolume : MonoBehaviour
             }
         }
         LOD lod = new LOD();
-        
+
         var lodGroup = GetComponent<LODGroup>();
         if (!lodGroup)
             lodGroup = gameObject.AddComponent<LODGroup>();
@@ -714,10 +713,10 @@ public class LODVolume : MonoBehaviour
     [ContextMenu("GenerateLODs")]
     void GenerateLODsContext()
     {
-        GenerateLODs(null);
+        GenerateLODs();
     }
 
-    void GenerateLODs(Action completedCallback)
+    void GenerateLODs()
     {
         int maxLOD = 1;
         var go = gameObject;
@@ -764,33 +763,11 @@ public class LODVolume : MonoBehaviour
                     lodMF.sharedMesh = simplifiedMesh;
                     meshes.Add(simplifiedMesh);
 
-                    var worker = new BackgroundWorker();
-
-                    var index = l;
-                    var inputMesh = sharedMesh.ToWorkingMesh();
-                    var outputMesh = simplifiedMesh.ToWorkingMesh();
-
-                    var meshSimplifier = (IMeshSimplifier)Activator.CreateInstance(meshSimplifierType);
-                    worker.DoWork += (sender, args) =>
-                    {
-                        meshSimplifier.Simplify(inputMesh, outputMesh, Mathf.Pow(0.5f, l));
-                        args.Result = outputMesh;
-                    };
-
-                    worker.RunWorkerCompleted += (sender, args) =>
-                    {
-                        Debug.Log("Completed LOD " + index);
-                        var resultMesh = (WorkingMesh)args.Result;
-                        resultMesh.ApplyToMesh(simplifiedMesh);
-                        simplifiedMesh.RecalculateBounds();
-
-                        runningMeshCount++;
-                        Debug.Log(runningMeshCount + " vs " + totalMeshCount);
-                        if (runningMeshCount == totalMeshCount && completedCallback != null)
-                            completedCallback();
-                    };
-
-                    worker.RunWorkerAsync();
+                    var meshLOD = new MeshLOD();
+                    meshLOD.inputMesh = sharedMesh;
+                    meshLOD.outputMesh = simplifiedMesh;
+                    meshLOD.quality = Mathf.Pow(0.5f, l);
+                    meshLOD.meshSimplifierType = meshSimplifierType;
                 }
 
                 var lod = lods[l];

@@ -21,7 +21,7 @@ namespace Unity.AutoLOD
     {
         static object executionLock = new object();
 
-        public void Simplify(WorkingMesh inputMesh, WorkingMesh outputMesh, float quality)
+        public void Simplify(ref WorkingMesh inputMesh, ref WorkingMesh outputMesh, float quality)
         {
             Renderer renderer = null;
 

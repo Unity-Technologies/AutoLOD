@@ -14,7 +14,7 @@ namespace Unity.AutoLOD
 {
     public class QuadricMeshSimplifier : IMeshSimplifier
     {
-        public void Simplify(Mesh inputMesh, Mesh outputMesh, float quality)
+        public void Simplify(ref Mesh inputMesh, ref Mesh outputMesh, float quality)
         {
             var meshSimplifier = new MeshSimplifier();
             meshSimplifier.Vertices = inputMesh.vertices;

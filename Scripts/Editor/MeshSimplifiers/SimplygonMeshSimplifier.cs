@@ -27,7 +27,7 @@ namespace Unity.AutoLOD
     {
         static object executionLock = new object();
 
-        public void Simplify(WorkingMesh inputMesh, WorkingMesh outputMesh, float quality)
+        public void Simplify(ref WorkingMesh inputMesh, ref WorkingMesh outputMesh, float quality)
         {
             var isMainThread = MonoBehaviourHelper.IsMainThread();
 
@@ -117,7 +117,7 @@ namespace Unity.AutoLOD
                 if (!isMainThread)
                     Thread.Sleep(100);
             }
-        
+
             MonoBehaviourHelper.ExecuteOnMainThread(() =>
             {
                 var customDataType = assembly.GetType("Simplygon.Cloud.Yoda.IntegrationClient.CloudJob+CustomData");
@@ -125,7 +125,7 @@ namespace Unity.AutoLOD
                 var jobCustomDataProperty = cloudJobType.GetProperty("JobCustomData");
                 var jobCustomData = jobCustomDataProperty.GetValue(job.CloudJob, null);
                 var jobFolderName = pendingFolderNameProperty.GetValue(jobCustomData, null) as string;
-            
+
                 var lodAssetDir = "Assets/LODs/" + job.AssetDirectory;
                 var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(string.Format("{0}/{1}_LOD1.prefab", lodAssetDir, jobName));
                 mesh.ApplyToWorkingMesh(outputMesh);
