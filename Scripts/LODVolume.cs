@@ -734,7 +734,6 @@ public class LODVolume : MonoBehaviour
             var meshes = new List<Mesh>();
 
             var totalMeshCount = maxLOD * lod0.renderers.Length;
-            var runningMeshCount = 0;
             for (int l = 1; l <= maxLOD; l++)
             {
                 var lodRenderers = new List<MeshRenderer>();

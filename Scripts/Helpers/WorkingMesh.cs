@@ -74,8 +74,6 @@ namespace Unity.AutoLOD
 
         const int k_MaxNameSize = 128;
 
-        NativeArray<int> m_Counts;
-
         public Vector3[] vertices
         {
             get
@@ -89,6 +87,7 @@ namespace Unity.AutoLOD
             }
         }
         NativeArray<Vector3> m_Vertices;
+
         public int vertexCount
         {
             get { return m_Counts[(int)Channel.Vertices]; }
@@ -106,6 +105,7 @@ namespace Unity.AutoLOD
             }
         }
         NativeArray<int> m_Triangles;
+
         int trianglesCount
         {
             get { return m_Counts[(int)Channel.Triangles]; }
@@ -128,8 +128,8 @@ namespace Unity.AutoLOD
                 }
             }
         }
-
         NativeArray<Vector3> m_Normals;
+
         int normalsCount
         {
             get { return m_Counts[(int)Channel.Normals]; }
@@ -152,8 +152,8 @@ namespace Unity.AutoLOD
                 }
             }
         }
-
         NativeArray<Vector4> m_Tangents;
+
         int tangentsCount
         {
             get { return m_Counts[(int)Channel.Tangents]; }
@@ -176,8 +176,8 @@ namespace Unity.AutoLOD
                 }
             }
         }
-
         NativeArray<Vector2> m_UV;
+
         int uvCount
         {
             get { return m_Counts[(int)Channel.UV]; }
@@ -200,8 +200,8 @@ namespace Unity.AutoLOD
                 }
             }
         }
-
         NativeArray<Vector2> m_UV2;
+
         int uv2Count
         {
             get { return m_Counts[(int)Channel.UV2]; }
@@ -224,8 +224,8 @@ namespace Unity.AutoLOD
                 }
             }
         }
-
         NativeArray<Vector2> m_UV3;
+
         int uv3Count
         {
             get { return m_Counts[(int)Channel.UV3]; }
@@ -248,8 +248,8 @@ namespace Unity.AutoLOD
                 }
             }
         }
-
         NativeArray<Vector2> m_UV4;
+
         int uv4Count
         {
             get { return m_Counts[(int)Channel.UV4]; }
@@ -272,8 +272,8 @@ namespace Unity.AutoLOD
                 }
             }
         }
-
         NativeArray<Color> m_Colors;
+
         int colorsCount
         {
             get { return m_Counts[(int)Channel.Colors]; }
@@ -302,8 +302,8 @@ namespace Unity.AutoLOD
                 }
             }
         }
-
         NativeArray<BoneWeight> m_BoneWeights;
+
         int boneWeightsCount
         {
             get { return m_Counts[(int)Channel.BoneWeights]; }
@@ -326,8 +326,8 @@ namespace Unity.AutoLOD
                 }
             }
         }
-
         NativeArray<Matrix4x4> m_Bindposes;
+
         int bindposesCount
         {
             get { return m_Counts[(int)Channel.Bindposes]; }
@@ -351,8 +351,8 @@ namespace Unity.AutoLOD
                 }
             }
         }
-
         NativeArray<int> m_SubmeshOffset;
+
         int submeshOffsetCount
         {
             get { return m_Counts[(int)Channel.SubmeshOffset]; }
@@ -367,18 +367,19 @@ namespace Unity.AutoLOD
                 if (value == null)
                     value = string.Empty;
 
-                var length = Mathf.Min(value.Length, k_MaxNameSize);
-                var bytes = Encoding.UTF8.GetBytes(value.Substring(0, length));
+                var bytes = Encoding.UTF8.GetBytes(value);
+                var length = Mathf.Min(bytes.Length, k_MaxNameSize);
                 m_Name.Slice(0, length).CopyFrom(bytes);
             }
         }
-
         NativeArray<byte> m_Name;
 
         // This data does not cross the job threshold, so if it needs to be read back, then it will need to be
         // in a NativeArray or some other type of NativeContainer
         public IndexFormat indexFormat { get; set; }
         public Bounds bounds { get; set; }
+
+        NativeArray<int> m_Counts;
 
         // These are stubbed out for API completeness, but obviously don't do anything
         public void RecalculateBounds() { }

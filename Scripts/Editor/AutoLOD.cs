@@ -2,6 +2,10 @@
 #define MIN_REQUIRED_VERSION
 #endif
 
+#if UNITY_2018_3_OR_NEWER
+#pragma warning disable 0618 // TODO: Remove this when MIN_REQUIRED_VERSION is 2018.3
+#endif
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
