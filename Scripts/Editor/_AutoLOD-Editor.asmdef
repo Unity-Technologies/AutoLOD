@@ -2,12 +2,17 @@
     "name": "AutoLOD-Editor",
     "references": [
         "AutoLOD",
-        "UnityMeshSimplifier"
+        "Whinarn.UnityMeshSimplifier.Runtime"
     ],
     "optionalUnityReferences": [],
     "includePlatforms": [
         "Editor"
     ],
     "excludePlatforms": [],
-    "allowUnsafeCode": false
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
 }
