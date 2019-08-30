@@ -185,7 +185,7 @@ namespace Unity.AutoLOD
                             AssetDatabase.SaveAssets();
 
                         // Process dependencies first
-                        var jobDependencies = new NativeArray<JobHandle>(preprocessMeshes.Count, Allocator.Temp);
+                        var jobDependencies = new NativeArray<JobHandle>(preprocessMeshes.Count, Allocator.Persistent);
                         var i = 0;
                         meshLODs.RemoveAll(ml =>
                         {
