@@ -185,7 +185,7 @@ namespace Unity.AutoLOD
                             AssetDatabase.SaveAssets();
 
                         // Process dependencies first
-                        var jobDependencies = new NativeArray<JobHandle>(preprocessMeshes.Count, Allocator.Temp);
+                        var jobDependencies = new NativeArray<JobHandle>(preprocessMeshes.Count, Allocator.Persistent);
                         var i = 0;
                         meshLODs.RemoveAll(ml =>
                         {
@@ -272,7 +272,7 @@ namespace Unity.AutoLOD
                     lods.Add(lod);
                 }
 
-                if (importerLODLevels.arraySize != 0 && maxLODFound != importerLODLevels.arraySize)
+                if (importerLODLevels.arraySize != 0 && maxLODFound != importerLODLevels.arraySize - 1)
                     Debug.LogWarning("The model has an existing lod group, but it's settings will not be used because " +
                         "the specified lod count in the AutoLOD settings is different.");
 
