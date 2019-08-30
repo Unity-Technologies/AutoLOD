@@ -61,9 +61,8 @@ namespace Unity.AutoLOD
             }
             get
             {
-                var meshSimplifiers = s_MeshSimplifiers.ToArray();
                 var type = Type.GetType(EditorPrefs.GetString(k_DefaultMeshSimplifier, k_DefaultMeshSimplifierDefault));
-                if (type == null && meshSimplifiers.Length > 0)
+                if (type == null && meshSimplifiers.Count > 0)
                     type = Type.GetType(meshSimplifiers[0].AssemblyQualifiedName);
                 return type;
             }
@@ -82,9 +81,8 @@ namespace Unity.AutoLOD
             }
             get
             {
-                var batchers = s_Batchers.ToArray();
                 var type = Type.GetType(EditorPrefs.GetString(k_DefaultBatcher, null));
-                if (type == null && batchers.Length > 0)
+                if (type == null && batchers.Count > 0)
                     type = Type.GetType(batchers[0].AssemblyQualifiedName);
                 return type;
             }
@@ -150,9 +148,31 @@ namespace Unity.AutoLOD
             get { return EditorPrefs.GetBool(k_ShowVolumeBounds, false); }
         }
 
+        static List<Type> meshSimplifiers
+        {
+            get
+            {
+                if (s_MeshSimplifiers == null)
+                    s_MeshSimplifiers = ObjectUtils.GetImplementationsOfInterface(typeof(IMeshSimplifier)).ToList();
+
+                return s_MeshSimplifiers;
+            }
+        }
+
+        static List<Type> batchers
+        {
+            get
+            {
+                if (s_Batchers == null)
+                    s_Batchers = ObjectUtils.GetImplementationsOfInterface(typeof(IBatcher)).ToList();
+
+                return s_Batchers;
+            }
+        }
+
         static SceneLOD s_SceneLOD;
-        static List<Type> s_MeshSimplifiers = ObjectUtils.GetImplementationsOfInterface(typeof(IMeshSimplifier)).ToList();
-        static List<Type> s_Batchers = ObjectUtils.GetImplementationsOfInterface(typeof(IBatcher)).ToList();
+        static List<Type> s_MeshSimplifiers;
+        static List<Type> s_Batchers;
 
         static void UpdateDependencies()
         {
@@ -504,11 +524,10 @@ namespace Unity.AutoLOD
                         lodMF.sharedMesh = simplifiedMesh;
                         meshes.Add(simplifiedMesh);
 
-                        MeshLOD meshLOD = new MeshLOD();
-                        meshLOD.inputMesh = sharedMesh;
-                        meshLOD.outputMesh = simplifiedMesh;
-                        meshLOD.quality = Mathf.Pow(0.5f, l);
-                        meshLOD.meshSimplifierType = meshSimplifierType;
+                        var meshLOD = MeshLOD.GetGenericInstance(meshSimplifierType);
+                        meshLOD.InputMesh = sharedMesh;
+                        meshLOD.OutputMesh = simplifiedMesh;
+                        meshLOD.Quality = Mathf.Pow(0.5f, l);
                         meshLOD.Generate();
                     }
 
@@ -630,11 +649,11 @@ namespace Unity.AutoLOD
                         + "different approaches can be compared. The default mesh simplifier is used to generate LODs "
                         + "on import and when explicitly called.");
 
-                    var displayedOptions = s_MeshSimplifiers.Select(t => t.Name).ToArray();
+                    var displayedOptions = meshSimplifiers.Select(t => t.Name).ToArray();
                     EditorGUI.BeginChangeCheck();
                     var selected = EditorGUILayout.Popup(label, Array.IndexOf(displayedOptions, type.Name), displayedOptions);
                     if (EditorGUI.EndChangeCheck())
-                        meshSimplifierType = s_MeshSimplifiers[selected];
+                        meshSimplifierType = meshSimplifiers[selected];
                 }
                 else
                 {

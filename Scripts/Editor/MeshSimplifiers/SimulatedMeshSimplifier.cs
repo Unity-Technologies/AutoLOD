@@ -6,7 +6,7 @@ using Mesh = Unity.AutoLOD.WorkingMesh;
 namespace Unity.AutoLOD
 {
     [HideInInspector]
-    public class SimulatedMeshSimplifier : IMeshSimplifier
+    public struct SimulatedMeshSimplifier : IMeshSimplifier
     {
         public void Simplify(Mesh inputMesh, Mesh outputMesh, float quality)
         {

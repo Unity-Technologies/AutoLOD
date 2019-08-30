@@ -762,11 +762,10 @@ public class LODVolume : MonoBehaviour
                     lodMF.sharedMesh = simplifiedMesh;
                     meshes.Add(simplifiedMesh);
 
-                    var meshLOD = new MeshLOD();
-                    meshLOD.inputMesh = sharedMesh;
-                    meshLOD.outputMesh = simplifiedMesh;
-                    meshLOD.quality = Mathf.Pow(0.5f, l);
-                    meshLOD.meshSimplifierType = meshSimplifierType;
+                    var meshLOD = MeshLOD.GetGenericInstance(meshSimplifierType);
+                    meshLOD.InputMesh = sharedMesh;
+                    meshLOD.OutputMesh = simplifiedMesh;
+                    meshLOD.Quality = Mathf.Pow(0.5f, l);
                 }
 
                 var lod = lods[l];

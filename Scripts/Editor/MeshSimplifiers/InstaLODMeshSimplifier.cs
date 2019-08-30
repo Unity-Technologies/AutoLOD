@@ -17,7 +17,7 @@ using UnityObject = UnityEngine.Object;
 #if ENABLE_INSTALOD
 namespace Unity.AutoLOD
 {
-    public class InstaLODMeshSimplifier : IMeshSimplifier
+    public struct InstaLODMeshSimplifier : IMeshSimplifier
     {
         static object executionLock = new object();
 

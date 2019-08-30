@@ -7,48 +7,63 @@ using UnityEngine;
 
 namespace Unity.AutoLOD
 {
-    struct MeshLOD
+    interface IMeshGenerateLODJob : IJob, IDisposable
     {
-        public Mesh inputMesh;
-        public Mesh outputMesh;
-        public float quality;
-        public Type meshSimplifierType;
+        WorkingMesh InputMesh { set;  }
+        WorkingMesh OutputMesh { get; set; }
+        float Quality { set; }
+    }
 
-        struct GenerateMeshLODJob : IJob
+    interface IMeshLOD
+    {
+        Mesh InputMesh { set; }
+        Mesh OutputMesh { get; set; }
+        float Quality { set; }
+
+        JobHandle Generate(NativeArray<JobHandle>? jobDependencies = null);
+    }
+
+    struct MeshGenerateLODJob<TSimplifier> : IMeshGenerateLODJob
+        where TSimplifier : struct, IMeshSimplifier
+    {
+        public WorkingMesh InputMesh { get; set; }
+        public WorkingMesh OutputMesh { get; set; }
+        public float Quality { get; set; }
+
+        public void Execute()
         {
-            public NativeArray<byte> meshSimplifierTypeName;
-            public WorkingMesh inputMesh;
-            public WorkingMesh outputMesh;
-            public float quality;
-
-            public void Execute()
-            {
-                outputMesh.indexFormat = inputMesh.indexFormat;
-                var typeName = Encoding.UTF8.GetString(meshSimplifierTypeName.ToArray());
-                var meshSimplifierType = Type.GetType(typeName);
-                var meshSimplifier = (IMeshSimplifier)Activator.CreateInstance(meshSimplifierType);
-                meshSimplifier.Simplify(inputMesh, outputMesh, quality);
-            }
-
-            public void Dispose()
-            {
-                meshSimplifierTypeName.Dispose();
-                inputMesh.Dispose();
-                outputMesh.Dispose();
-            }
+            var outputMesh = OutputMesh;
+            outputMesh.indexFormat = InputMesh.indexFormat;
+            OutputMesh = outputMesh;
+            var meshSimplifier = default(TSimplifier);
+            meshSimplifier.Simplify(InputMesh, OutputMesh, Quality);
         }
 
-        IEnumerator UpdateMesh(JobHandle jobHandle, GenerateMeshLODJob job)
+        public void Dispose()
+        {
+            InputMesh.Dispose();
+            OutputMesh.Dispose();
+        }
+    }
+
+    struct MeshLOD<T> : IMeshLOD
+        where T : struct, IMeshGenerateLODJob
+    {
+        public Mesh InputMesh { get; set; }
+        public Mesh OutputMesh { get; set; }
+        public float Quality { get; set; }
+
+        IEnumerator UpdateMesh(JobHandle jobHandle, IMeshGenerateLODJob job)
         {
             while (!jobHandle.IsCompleted)
                 yield return new WaitForSecondsRealtime(0.5f);
 
             jobHandle.Complete();
 
-            var finalMesh = outputMesh;
-            var jobOutputMesh = job.outputMesh;
+            var finalMesh = OutputMesh;
+            var jobOutputMesh = job.OutputMesh;
             jobOutputMesh.name = finalMesh.name;
-            jobOutputMesh.ApplyToMesh(outputMesh);
+            jobOutputMesh.ApplyToMesh(OutputMesh);
             finalMesh.RecalculateBounds();
 
             job.Dispose();
@@ -59,12 +74,11 @@ namespace Unity.AutoLOD
             // A NOP to make sure we have an instance before launching into threads that may need to execute on the main thread
             MonoBehaviourHelper.ExecuteOnMainThread(() => { });
 
-            var job = new GenerateMeshLODJob();
-            job.inputMesh = inputMesh.ToWorkingMesh(Allocator.Persistent);
-            job.quality = quality;
-            var typeNameBytes = Encoding.UTF8.GetBytes(meshSimplifierType.AssemblyQualifiedName);
-            job.meshSimplifierTypeName = new NativeArray<byte>(typeNameBytes, Allocator.Persistent);
-            job.outputMesh = new WorkingMesh(Allocator.Persistent, inputMesh.vertexCount, inputMesh.GetTriangleCount(),
+            var job = default(T);
+            var inputMesh = InputMesh;
+            job.InputMesh = inputMesh.ToWorkingMesh(Allocator.Persistent);
+            job.Quality = Quality;
+            job.OutputMesh = new WorkingMesh(Allocator.Persistent, inputMesh.vertexCount, inputMesh.GetTriangleCount(),
                 inputMesh.subMeshCount, inputMesh.blendShapeCount);
 
             JobHandle jobHandle;
@@ -76,6 +90,22 @@ namespace Unity.AutoLOD
             MonoBehaviourHelper.StartCoroutine(UpdateMesh(jobHandle, job));
 
             return jobHandle;
+        }
+    }
+
+    static class MeshLOD
+    {
+        static Type GetGenericType(Type meshSimplifierType)
+        {
+            var genericJobType = typeof(MeshGenerateLODJob<>).MakeGenericType(meshSimplifierType);
+            var genericType = typeof(MeshLOD<>).MakeGenericType(genericJobType);
+
+            return genericType;
+        }
+
+        public static IMeshLOD GetGenericInstance(Type meshSimplifierType)
+        {
+            return (IMeshLOD)Activator.CreateInstance(GetGenericType(meshSimplifierType));
         }
     }
 }

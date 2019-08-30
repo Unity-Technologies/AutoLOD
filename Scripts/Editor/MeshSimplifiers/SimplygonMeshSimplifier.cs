@@ -23,7 +23,7 @@ using UnityObject = UnityEngine.Object;
 #if ENABLE_SIMPLYGON
 namespace Unity.AutoLOD
 {
-    public class SimplygonMeshSimplifier : IMeshSimplifier
+    public struct SimplygonMeshSimplifier : IMeshSimplifier
     {
         static object executionLock = new object();
 

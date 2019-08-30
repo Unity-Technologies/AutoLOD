@@ -12,7 +12,7 @@ using Mesh = Unity.AutoLOD.WorkingMesh;
 #if ENABLE_UNITYMESHSIMPLIFIER
 namespace Unity.AutoLOD
 {
-    public class QuadricMeshSimplifier : IMeshSimplifier
+    public struct QuadricMeshSimplifier : IMeshSimplifier
     {
         public void Simplify(Mesh inputMesh, Mesh outputMesh, float quality)
         {

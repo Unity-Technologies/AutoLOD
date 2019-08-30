@@ -70,7 +70,7 @@ namespace Unity.AutoLOD
                     }
                 }
 
-                var meshLODs = new List<MeshLOD>();
+                var meshLODs = new List<IMeshLOD>();
                 var preprocessMeshes = new HashSet<int>();
 
                 var lodData = GetLODData(assetPath);
@@ -101,11 +101,10 @@ namespace Unity.AutoLOD
                             outputMesh.bounds = inputMesh.bounds;
                             mf.sharedMesh = outputMesh;
 
-                            var meshLOD = new MeshLOD();
-                            meshLOD.inputMesh = inputMesh;
-                            meshLOD.outputMesh = outputMesh;
-                            meshLOD.quality = (float)importSettings.initialLODMaxPolyCount / (float)polyCount;
-                            meshLOD.meshSimplifierType = simplifierType;
+                            var meshLOD = MeshLOD.GetGenericInstance(meshSimplifierType);
+                            meshLOD.InputMesh = inputMesh;
+                            meshLOD.OutputMesh = outputMesh;
+                            meshLOD.Quality = (float)importSettings.initialLODMaxPolyCount / (float)polyCount;
                             meshLODs.Add(meshLOD);
 
                             preprocessMeshes.Add(outputMesh.GetInstanceID());
@@ -149,11 +148,10 @@ namespace Unity.AutoLOD
 
                             EditorUtility.CopySerialized(mf.GetComponent<MeshRenderer>(), lodRenderer);
 
-                            var meshLOD = new MeshLOD();
-                            meshLOD.inputMesh = inputMesh;
-                            meshLOD.outputMesh = outputMesh;
-                            meshLOD.quality = Mathf.Pow(0.5f, i);
-                            meshLOD.meshSimplifierType = simplifierType;
+                            var meshLOD = MeshLOD.GetGenericInstance(meshSimplifierType);
+                            meshLOD.InputMesh = inputMesh;
+                            meshLOD.OutputMesh = outputMesh;
+                            meshLOD.Quality = Mathf.Pow(0.5f, i);
                             meshLODs.Add(meshLOD);
                         }
 
@@ -180,7 +178,7 @@ namespace Unity.AutoLOD
                             }
                             EditorUtility.SetDirty(lodData);
                         }
-                        meshLODs.ForEach(ml => AssetDatabase.AddObjectToAsset(ml.outputMesh, lodData));
+                        meshLODs.ForEach(ml => AssetDatabase.AddObjectToAsset(ml.OutputMesh, lodData));
                         if (saveAssets)
                             AssetDatabase.SaveAssets();
 
@@ -189,7 +187,7 @@ namespace Unity.AutoLOD
                         var i = 0;
                         meshLODs.RemoveAll(ml =>
                         {
-                            if (preprocessMeshes.Contains(ml.outputMesh.GetInstanceID()))
+                            if (preprocessMeshes.Contains(ml.OutputMesh.GetInstanceID()))
                             {
                                 jobDependencies[i++] = ml.Generate();
                                 return true;
