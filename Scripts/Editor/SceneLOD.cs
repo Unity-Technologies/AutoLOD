@@ -148,7 +148,11 @@ namespace Unity.AutoLOD
 #endif
             Selection.selectionChanged += OnSelectionChanged;
             Camera.onPreCull += PreCull;
+#if UNITY_2019_1_OR_NEWER
+            SceneView.duringSceneGui += OnSceneGUI;
+#else
             SceneView.onSceneGUIDelegate += OnSceneGUI;
+#endif
         }
 
         void RemoveCallbacks()
@@ -161,7 +165,11 @@ namespace Unity.AutoLOD
 #endif
             Selection.selectionChanged -= OnSelectionChanged;
             Camera.onPreCull -= PreCull;
+#if UNITY_2019_1_OR_NEWER
+            SceneView.duringSceneGui -= OnSceneGUI;
+#else
             SceneView.onSceneGUIDelegate -= OnSceneGUI;
+#endif
         }
 
         void OnHierarchyChanged()

@@ -38,7 +38,6 @@ namespace Unity.AutoLOD
         const string k_SceneLODEnabled = "AutoLOD.SceneLODEnabled";
         const string k_ShowVolumeBounds = "AutoLOD.ShowVolumeBounds";
 
-
         static int maxExecutionTime
         {
             set
@@ -62,7 +61,7 @@ namespace Unity.AutoLOD
             }
             get
             {
-                var meshSimplifiers = ObjectUtils.GetImplementationsOfInterface(typeof(IMeshSimplifier)).ToArray();
+                var meshSimplifiers = s_MeshSimplifiers.ToArray();
                 var type = Type.GetType(EditorPrefs.GetString(k_DefaultMeshSimplifier, k_DefaultMeshSimplifierDefault));
                 if (type == null && meshSimplifiers.Length > 0)
                     type = Type.GetType(meshSimplifiers[0].AssemblyQualifiedName);
@@ -83,7 +82,7 @@ namespace Unity.AutoLOD
             }
             get
             {
-                var batchers = ObjectUtils.GetImplementationsOfInterface(typeof(IBatcher)).ToArray();
+                var batchers = s_Batchers.ToArray();
                 var type = Type.GetType(EditorPrefs.GetString(k_DefaultBatcher, null));
                 if (type == null && batchers.Length > 0)
                     type = Type.GetType(batchers[0].AssemblyQualifiedName);
@@ -151,8 +150,9 @@ namespace Unity.AutoLOD
             get { return EditorPrefs.GetBool(k_ShowVolumeBounds, false); }
         }
 
-
-        static SceneLOD m_SceneLOD;
+        static SceneLOD s_SceneLOD;
+        static List<Type> s_MeshSimplifiers = ObjectUtils.GetImplementationsOfInterface(typeof(IMeshSimplifier)).ToList();
+        static List<Type> s_Batchers = ObjectUtils.GetImplementationsOfInterface(typeof(IBatcher)).ToList();
 
         static void UpdateDependencies()
         {
@@ -630,12 +630,11 @@ namespace Unity.AutoLOD
                         + "different approaches can be compared. The default mesh simplifier is used to generate LODs "
                         + "on import and when explicitly called.");
 
-                    var meshSimplifiers = ObjectUtils.GetImplementationsOfInterface(typeof(IMeshSimplifier)).ToList();
-                    var displayedOptions = meshSimplifiers.Select(t => t.Name).ToArray();
+                    var displayedOptions = s_MeshSimplifiers.Select(t => t.Name).ToArray();
                     EditorGUI.BeginChangeCheck();
                     var selected = EditorGUILayout.Popup(label, Array.IndexOf(displayedOptions, type.Name), displayedOptions);
                     if (EditorGUI.EndChangeCheck())
-                        meshSimplifierType = meshSimplifiers[selected];
+                        meshSimplifierType = s_MeshSimplifiers[selected];
                 }
                 else
                 {
@@ -653,12 +652,11 @@ namespace Unity.AutoLOD
                         + "different approaches can be compared. The default batcher is used in HLOD generation when "
                         + "combining objects that are located within the same LODVolume.");
 
-                    var batchers = ObjectUtils.GetImplementationsOfInterface(typeof(IBatcher)).ToList();
-                    var displayedOptions = batchers.Select(t => t.Name).ToArray();
+                    var displayedOptions = s_Batchers.Select(t => t.Name).ToArray();
                     EditorGUI.BeginChangeCheck();
                     var selected = EditorGUILayout.Popup(label, Array.IndexOf(displayedOptions, type.Name), displayedOptions);
                     if (EditorGUI.EndChangeCheck())
-                        batcherType = batchers[selected];
+                        batcherType = s_Batchers[selected];
                 }
                 else
                 {

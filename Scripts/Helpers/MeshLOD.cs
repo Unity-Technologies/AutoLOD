@@ -60,10 +60,10 @@ namespace Unity.AutoLOD
             MonoBehaviourHelper.ExecuteOnMainThread(() => { });
 
             var job = new GenerateMeshLODJob();
-            job.inputMesh = inputMesh.ToWorkingMesh(Allocator.TempJob);
+            job.inputMesh = inputMesh.ToWorkingMesh(Allocator.Persistent);
             job.quality = quality;
             var typeNameBytes = Encoding.UTF8.GetBytes(meshSimplifierType.AssemblyQualifiedName);
-            job.meshSimplifierTypeName = new NativeArray<byte>(typeNameBytes, Allocator.TempJob);
+            job.meshSimplifierTypeName = new NativeArray<byte>(typeNameBytes, Allocator.Persistent);
             job.outputMesh = new WorkingMesh(Allocator.Persistent, inputMesh.vertexCount, inputMesh.GetTriangleCount(),
                 inputMesh.subMeshCount, inputMesh.blendShapeCount);
 
