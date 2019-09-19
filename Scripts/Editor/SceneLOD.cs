@@ -27,6 +27,7 @@ namespace Unity.AutoLOD
                         AssetDatabase.StartAssetEditing();
 
                         var scene = SceneManager.GetSceneByPath(path);
+                        if(!scene.IsValid()) continue;
                         var rootGameObjects = scene.GetRootGameObjects();
                         foreach (var go in rootGameObjects)
                         {
