@@ -1,9 +1,9 @@
-﻿#if !UNITY_2018_1_OR_NEWER
-#define MIN_REQUIRED_VERSION
+﻿#if UNITY_2018_1_OR_NEWER
+#define HAS_MINIMUM_REQUIRED_VERSION
 #endif
 
 #if UNITY_2018_3_OR_NEWER
-#pragma warning disable 0618 // TODO: Remove this when MIN_REQUIRED_VERSION is 2018.3
+#pragma warning disable 0618 // TODO: Remove this when minimum version is 2018.3
 #endif
 
 using System;
@@ -176,7 +176,14 @@ namespace Unity.AutoLOD
 
         static void UpdateDependencies()
         {
-#if !MIN_REQUIRED_VERSION
+#if HAS_MINIMUM_REQUIRED_VERSION
+            if (meshSimplifierType == null)
+            {
+                Debug.LogError("AutoLOD: You must set a valid Default Mesh Simplifier under Edit -> Preferences");
+                ModelImporterLODGenerator.enabled = false;
+                return;
+            }
+
             MonoBehaviourHelper.maxSharedExecutionTimeMS = maxExecutionTime == 0 ? Mathf.Infinity : maxExecutionTime;
 
             LODDataEditor.meshSimplifier = meshSimplifierType.AssemblyQualifiedName;
@@ -211,7 +218,7 @@ namespace Unity.AutoLOD
 
         static AutoLOD()
         {
-#if !MIN_REQUIRED_VERSION
+#if HAS_MINIMUM_REQUIRED_VERSION
             UpdateDependencies();
 #else
             Debug.LogWarning(k_MinimumRequiredVersion);
@@ -611,7 +618,7 @@ namespace Unity.AutoLOD
             EditorGUILayout.BeginVertical();
             EditorGUILayout.Space();
 
-#if !MIN_REQUIRED_VERSION
+#if HAS_MINIMUM_REQUIRED_VERSION
             // Max execution time
             {
                 var label = new GUIContent("Max Execution Time (ms)",
