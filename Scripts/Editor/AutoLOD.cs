@@ -677,11 +677,11 @@ namespace Unity.AutoLOD
                         + "different approaches can be compared. The default batcher is used in HLOD generation when "
                         + "combining objects that are located within the same LODVolume.");
 
-                    var displayedOptions = s_Batchers.Select(t => t.Name).ToArray();
+                    var displayedOptions = batchers.Select(t => t.Name).ToArray();
                     EditorGUI.BeginChangeCheck();
                     var selected = EditorGUILayout.Popup(label, Array.IndexOf(displayedOptions, type.Name), displayedOptions);
                     if (EditorGUI.EndChangeCheck())
-                        batcherType = s_Batchers[selected];
+                        batcherType = batchers[selected];
                 }
                 else
                 {
