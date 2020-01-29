@@ -111,8 +111,6 @@ namespace Unity.AutoLOD
 #if UNITY_2017_3_OR_NEWER
             if (LayerMask.NameToLayer(LODVolume.HLODLayer) == -1)
             {
-                Dbg.LogWarning("Adding missing HLOD layer");
-
                 var layers = TagManager.GetRequiredLayers();
                 foreach (var layer in layers)
                 {
@@ -129,7 +127,7 @@ namespace Unity.AutoLOD
             if (s_Activated)
                 AddCallbacks();
 
-            m_ServiceCoroutineQueue = null;
+            ResetServiceCoroutineQueue();
 #endif
         }
 
@@ -286,14 +284,9 @@ namespace Unity.AutoLOD
                 if (!m_RootVolume)
                 {
                     if (m_CreateRootVolumeForScene == SceneManager.GetActiveScene().name)
-                    {
-                        Dbg.Log("Creating root volume");
                         m_RootVolume = LODVolume.Create();
-                    }
                     else
-                    {
                         yield break;
-                    }
                 }
             }
 
@@ -427,10 +420,12 @@ namespace Unity.AutoLOD
 
         void EditorUpdate()
         {
-            if ((m_CoroutineQueue.Count > 0 || m_SceneDirty || (m_RootVolume && m_RootVolume.dirty)) && m_ServiceCoroutineQueue == null)
+            if ((m_CoroutineQueue.Count > 0 || m_SceneDirty || (m_RootVolume && m_RootVolume.dirty))
+                && m_ServiceCoroutineQueue == null)
+            {
                 m_ServiceCoroutineQueue = MonoBehaviourHelper.StartCoroutine(ServiceCoroutineQueue());
+            }
         }
-
         IEnumerator ServiceCoroutineQueue()
         {
             m_ServiceCoroutineExecutionTime.Start();
@@ -445,8 +440,15 @@ namespace Unity.AutoLOD
                 m_CoroutineQueue.Enqueue(m_RootVolume.UpdateHLODs());
 
             while (m_CoroutineQueue.Count > 0)
+            {
                 yield return MonoBehaviourHelper.StartCoroutine(m_CoroutineQueue.Dequeue());
+            }
 
+            ResetServiceCoroutineQueue();
+        }
+
+        void ResetServiceCoroutineQueue()
+        {
             m_ServiceCoroutineQueue = null;
             m_ServiceCoroutineExecutionTime.Reset();
         }

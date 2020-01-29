@@ -204,11 +204,10 @@ namespace Unity.AutoLOD
             if (sceneLODEnabled && !SceneLOD.activated)
             {
                 if (!SceneLOD.instance)
-                    Debug.Log("SceneLOD failed to start");
+                    Debug.LogError("SceneLOD failed to start");
             }
             else if (!sceneLODEnabled && SceneLOD.activated)
             {
-                Debug.Log("Destroying SceneLOD instance");
                 UnityObject.DestroyImmediate(SceneLOD.instance);
             }
 #else

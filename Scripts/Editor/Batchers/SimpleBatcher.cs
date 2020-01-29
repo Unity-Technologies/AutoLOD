@@ -43,7 +43,6 @@ namespace Unity.AutoLOD
             var renderers = go.GetComponentsInChildren<Renderer>();
             var materials = new HashSet<Material>(renderers.SelectMany(r => r.sharedMaterials));
 
-            //foreach (var material in materials) { Debug.Log(material); }
             var textures = new HashSet<Texture2D>(materials.Select(m =>
             {
                 if (m)

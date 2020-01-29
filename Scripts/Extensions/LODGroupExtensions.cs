@@ -22,9 +22,10 @@ namespace Unity.AutoLOD
         public static void SetEnabled(this LODVolume.LODGroupHelper lodGroupHelper, bool enabled)
         {
             var lodGroup = lodGroupHelper.lodGroup;
-            if (lodGroup.enabled != enabled)
+            if (lodGroup == null || lodGroup.enabled != enabled)
             {
-                lodGroup.enabled = enabled;
+                if (lodGroup)
+                    lodGroup.enabled = enabled;
                 SetRenderersEnabled(lodGroupHelper.lods, enabled);
             }
         }

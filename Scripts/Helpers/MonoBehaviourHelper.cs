@@ -226,12 +226,8 @@ namespace Unity.AutoLOD
                     counter++;
                     renderers.Clear();
 
-                    //yield return StartCoroutine(ObjectUtils.FindObjectsOfType(renderers), 5f);
-                    //Debug.Log(Time.renderedFrameCount);
-                    //yield return ((MonoBehaviour)instance).StartCoroutine(ObjectUtils.FindObjectsOfType(renderers));
                     yield return ObjectUtils.FindObjectsOfType(renderers);
 
-                    //Debug.Log(Time.renderedFrameCount);
                     Debug.Log("Renderers: " + renderers.Count);
 
                     if (counter > 1000)
@@ -246,9 +242,6 @@ namespace Unity.AutoLOD
                 {
                     counter++;
                     yield return null;
-
-                    //if (counter % 1000 == 0)
-                    //    Debug.Log(counter);
 
                     if (counter > 10000)
                         break;

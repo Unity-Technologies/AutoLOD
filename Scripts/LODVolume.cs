@@ -108,6 +108,7 @@ public class LODVolume : MonoBehaviour
         {
             if (m_Cached.Count == 0)
             {
+                renderers.RemoveAll(r => r == null);
                 foreach (var r in renderers)
                 {
                     var lg = r.GetComponentInParent<LODGroup>();
@@ -284,8 +285,6 @@ public class LODVolume : MonoBehaviour
     {
         if (renderers != null && renderers.Remove(renderer))
         {
-            //Debug.Log("Removing " + renderer);
-
             foreach (Transform child in transform)
             {
                 var lodVolume = child.GetComponent<LODVolume>();
@@ -294,8 +293,6 @@ public class LODVolume : MonoBehaviour
 
                 yield return null;
             }
-
-            renderers.RemoveAll(r => r == null);
 
             if (!transform.parent)
                 yield return Shrink();
@@ -424,25 +421,37 @@ public class LODVolume : MonoBehaviour
 
     IEnumerator Shrink()
     {
-        var populatedChildrenNodes = new List<LODVolume>();
+        var populatedChildrenNodes = 0;
         foreach (Transform child in transform)
         {
             var lodVolume = child.GetComponent<LODVolume>();
             var renderers = lodVolume.renderers;
-            if (renderers != null && renderers.Count > 0)
-                populatedChildrenNodes.Add(lodVolume);
+            if (renderers != null && renderers.Count > 0 && renderers.Count(r => r != null) > 0)
+                populatedChildrenNodes++;
 
             yield return null;
         }
 
-        if (populatedChildrenNodes.Count == 1)
+        if (populatedChildrenNodes <= 1)
         {
-            var newRootVolume = populatedChildrenNodes[0];
-            newRootVolume.transform.parent = null;
-            CleanupHLOD();
+            var lodVolumes = GetComponentsInChildren<LODVolume>();
+            LODVolume newRootVolume = null;
+            if (lodVolumes.Length > 0)
+            {
+                newRootVolume = lodVolumes[lodVolumes.Length - 1];
+                newRootVolume.transform.parent = null;
+            }
+
+            // Clean up child HLODs before destroying the GameObject; Otherwise, we'd leak into the scene
+            foreach (var lodVolume in lodVolumes)
+            {
+                if (lodVolume != newRootVolume)
+                    lodVolume.CleanupHLOD();
+            }
             DestroyImmediate(gameObject);
 
-            yield return newRootVolume.Shrink();
+            if (newRootVolume)
+                yield return newRootVolume.Shrink();
         }
     }
 
