@@ -19,7 +19,7 @@ Experimental means this:
 - LOD generation on model import with sensible [defaults](https://github.com/Unity-Technologies/AutoLOD/wiki/Home)
 - Project-wide and per-model LOD import settings
 - Asynchronous, pluggable LOD generation framework
-- Hierarchical LOD support via [SceneLOD](https://github.com/Unity-Technologies/AutoLOD/wiki/Scenelod) -> [Watch a [Quick Tutorial Video](http://www.youtube.com/watch?v=EuBeZvzVwrw "SceneLOD Tutorial")]
+- Hierarchical LOD support via [SceneLOD](https://github.com/Unity-Technologies/AutoLOD/wiki/Scenelod) -> [watch a [quick tutorial video](http://www.youtube.com/watch?v=EuBeZvzVwrw "SceneLOD Tutorial")]
 
 ### Useful classes (for your own projects, too!)
 - [MonoBehaviourHelper](Scripts/Helpers/MonoBehaviourHelper.cs) - a way to run coroutines in the editor + main thread execution from worker threads
