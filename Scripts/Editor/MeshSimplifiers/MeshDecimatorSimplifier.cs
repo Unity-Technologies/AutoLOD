@@ -32,7 +32,6 @@ namespace Unity.AutoLOD
             int targetTriangleCount = Mathf.CeilToInt(totalTriangleCount * quality);
 
             var algorithm = MeshDecimation.CreateAlgorithm(Algorithm.Default);
-            algorithm.KeepLinkedVertices = false;
 
             DecimationAlgorithm.StatusReportCallback statusCallback = (iteration, tris, currentTris, targetTris) =>
             {
