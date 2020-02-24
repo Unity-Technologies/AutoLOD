@@ -526,6 +526,7 @@ namespace Unity.AutoLOD
                         EditorUtility.CopySerialized(mf.GetComponent<MeshRenderer>(), lodRenderer);
 
                         var simplifiedMesh = new Mesh();
+                        simplifiedMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
                         simplifiedMesh.name = sharedMesh.name + string.Format(" LOD{0}", l);
                         lodMF.sharedMesh = simplifiedMesh;
                         meshes.Add(simplifiedMesh);

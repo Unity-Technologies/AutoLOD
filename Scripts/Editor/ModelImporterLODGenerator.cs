@@ -97,6 +97,7 @@ namespace Unity.AutoLOD
                             var inputMesh = mf.sharedMesh;
 
                             var outputMesh = new Mesh();
+                            outputMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
                             outputMesh.name = inputMesh.name;
                             outputMesh.bounds = inputMesh.bounds;
                             mf.sharedMesh = outputMesh;
@@ -140,6 +141,7 @@ namespace Unity.AutoLOD
                             AppendLODNameToRenderer(lodRenderer, i);
 
                             var outputMesh = new Mesh();
+                            outputMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
                             outputMesh.name = string.Format("{0} LOD{1}", inputMesh.name, i);
                             outputMesh.bounds = inputMesh.bounds;
                             lodMF.sharedMesh = outputMesh;
@@ -195,7 +197,6 @@ namespace Unity.AutoLOD
 
                             return false;
                         });
-
                         // Process remaining meshes
                         foreach (var ml in meshLODs)
                         {
