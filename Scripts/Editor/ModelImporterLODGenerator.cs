@@ -184,26 +184,34 @@ namespace Unity.AutoLOD
                         if (saveAssets)
                             AssetDatabase.SaveAssets();
 
-                        // Process dependencies first
-                        var jobDependencies = new NativeArray<JobHandle>(preprocessMeshes.Count, Allocator.Persistent);
-                        var i = 0;
-                        meshLODs.RemoveAll(ml =>
+                        if (preprocessMeshes.Count > 0)
                         {
-                            if (preprocessMeshes.Contains(ml.OutputMesh.GetInstanceID()))
+                            // Process dependencies first
+                            var jobDependencies = new List<JobHandle>();
+                            meshLODs.RemoveAll(ml =>
                             {
-                                jobDependencies[i++] = ml.Generate();
-                                return true;
+                                if (preprocessMeshes.Contains(ml.OutputMesh.GetInstanceID()))
+                                {
+                                    jobDependencies.Add(ml.Generate());
+                                    return true;
+                                }
+
+                                return false;
+                            });
+
+                            // Process remaining meshes
+                            foreach (var ml in meshLODs)
+                            {
+                                MonoBehaviourHelper.StartCoroutine(ml.GenerateAfterDependencies(jobDependencies));
                             }
-
-                            return false;
-                        });
-                        // Process remaining meshes
-                        foreach (var ml in meshLODs)
-                        {
-                            ml.Generate(jobDependencies);
                         }
-
-                        jobDependencies.Dispose();
+                        else
+                        {
+                            foreach (var ml in meshLODs)
+                            {
+                                ml.Generate();
+                            }
+                        }
                     }
                 }
                 else

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Text;
 using Unity.Collections;
 using Unity.Jobs;
@@ -20,7 +21,8 @@ namespace Unity.AutoLOD
         Mesh OutputMesh { get; set; }
         float Quality { set; }
 
-        JobHandle Generate(NativeArray<JobHandle>? jobDependencies = null);
+        IEnumerator GenerateAfterDependencies(List<JobHandle> jobDependencies);
+        JobHandle Generate();
     }
 
     struct MeshGenerateLODJob<TSimplifier> : IMeshGenerateLODJob
@@ -32,9 +34,6 @@ namespace Unity.AutoLOD
 
         public void Execute()
         {
-            var outputMesh = OutputMesh;
-            outputMesh.indexFormat = InputMesh.indexFormat;
-            OutputMesh = outputMesh;
             var meshSimplifier = default(TSimplifier);
             meshSimplifier.Simplify(InputMesh, OutputMesh, Quality);
         }
@@ -69,7 +68,21 @@ namespace Unity.AutoLOD
             job.Dispose();
         }
 
-        public JobHandle Generate(NativeArray<JobHandle>? jobDependencies = null)
+        public IEnumerator GenerateAfterDependencies(List<JobHandle> jobDependencies)
+        {
+            while (jobDependencies.Count > 0)
+            {
+                var jobDependency = jobDependencies[0];
+                if (!jobDependency.IsCompleted)
+                    yield return new WaitForSecondsRealtime(0.5f);
+                else
+                    jobDependencies.Remove(jobDependency);
+            }
+
+            Generate();
+        }
+
+        public JobHandle Generate()
         {
             // A NOP to make sure we have an instance before launching into threads that may need to execute on the main thread
             MonoBehaviourHelper.ExecuteOnMainThread(() => { });
@@ -78,17 +91,14 @@ namespace Unity.AutoLOD
             var inputMesh = InputMesh;
             job.InputMesh = inputMesh.ToWorkingMesh(Allocator.Persistent);
             job.Quality = Quality;
+            // Allocate a persistent working mesh for output, so that we can apply it after the job completes (i.e. memory
+            // allocated in a job is freed when the job completes)
             var workingMesh = new WorkingMesh(Allocator.Persistent, inputMesh.vertexCount, inputMesh.GetTriangleCount(),
                 inputMesh.subMeshCount, inputMesh.blendShapeCount);
             workingMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
             job.OutputMesh = workingMesh;
 
-            JobHandle jobHandle;
-            if (jobDependencies.HasValue)
-                jobHandle = job.Schedule(JobHandle.CombineDependencies(jobDependencies.Value));
-            else
-                jobHandle = job.Schedule();
-
+            var jobHandle = job.Schedule();
             MonoBehaviourHelper.StartCoroutine(UpdateMesh(jobHandle, job));
 
             return jobHandle;
