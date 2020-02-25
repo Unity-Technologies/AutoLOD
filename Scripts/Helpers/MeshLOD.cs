@@ -78,8 +78,10 @@ namespace Unity.AutoLOD
             var inputMesh = InputMesh;
             job.InputMesh = inputMesh.ToWorkingMesh(Allocator.Persistent);
             job.Quality = Quality;
-            job.OutputMesh = new WorkingMesh(Allocator.Persistent, inputMesh.vertexCount, inputMesh.GetTriangleCount(),
+            var workingMesh = new WorkingMesh(Allocator.Persistent, inputMesh.vertexCount, inputMesh.GetTriangleCount(),
                 inputMesh.subMeshCount, inputMesh.blendShapeCount);
+            workingMesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+            job.OutputMesh = workingMesh;
 
             JobHandle jobHandle;
             if (jobDependencies.HasValue)
