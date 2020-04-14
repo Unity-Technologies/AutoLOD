@@ -173,6 +173,7 @@ namespace Unity.AutoLOD
         static SceneLOD s_SceneLOD;
         static List<Type> s_MeshSimplifiers;
         static List<Type> s_Batchers;
+        static IPreferences s_SimplifierPreferences;
 
         static void UpdateDependencies()
         {
@@ -642,7 +643,6 @@ namespace Unity.AutoLOD
                     var maxTime = EditorGUILayout.IntSlider(label, maxExecutionTime, 0, 15);
                     if (EditorGUI.EndChangeCheck())
                         maxExecutionTime = maxTime;
-
                 }
             }
 
@@ -661,6 +661,19 @@ namespace Unity.AutoLOD
                     var selected = EditorGUILayout.Popup(label, Array.IndexOf(displayedOptions, type.Name), displayedOptions);
                     if (EditorGUI.EndChangeCheck())
                         meshSimplifierType = meshSimplifiers[selected];
+
+                    if (meshSimplifierType != null && typeof(IMeshSimplifier).IsAssignableFrom(meshSimplifierType))
+                    {
+                        if (s_SimplifierPreferences == null || s_SimplifierPreferences.GetType() != meshSimplifierType)
+                            s_SimplifierPreferences = (IPreferences)Activator.CreateInstance(meshSimplifierType);
+
+                        if (s_SimplifierPreferences != null)
+                        {
+                            EditorGUI.indentLevel++;
+                            s_SimplifierPreferences.OnPreferencesGUI();
+                            EditorGUI.indentLevel--;
+                        }
+                    }
                 }
                 else
                 {
