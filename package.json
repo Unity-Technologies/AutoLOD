@@ -1,12 +1,28 @@
 {
-    "name": "com.unity.auto-lod",
-    "displayName": "AutoLOD",
-    "version": "0.0.0",
-    "unity": "2019.2",
-    "unityRelease": "0f1",
+    "name": "com.amirebrahimi.auto-lod",
+    "displayName": "Unity AutoLOD",
+    "version": "1.0.0",
+    "unity": "2017.1",
+    "description": "Unity experimental automatic LOD generation",
     "dependencies": {
         "com.whinarn.unitymeshsimplifier": "2.3.3"
     },
-    "description": "Unity experimental automatic LOD generation",
-    "keywords": [ "autolod", "lod", "simplification", "decimate" ]
+    "keywords": [
+        "autolod",
+        "lod",
+        "3d",
+        "mesh",
+        "polygon",
+        "triangle",
+        "simplification",
+        "decimation",
+        "reduction",
+        "optimization"
+    ],
+    "author": {
+        "name": "Amir Ebrahimi",
+        "email": "github@aebrahimi.com",
+        "url": "http://amirebrahimi.com/"
+    },
+    "bugs": "https://github.com/Unity-Technologies/AutoLOD/issues"
 }
