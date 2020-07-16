@@ -1,6 +1,0 @@
-[submodule "Packages/CCU"]
-	path = Packages/CCU
-	url=https://github.com/Unity-Technologies/ConditionalCompilationUtility/
-[submodule "Packages/UnityMeshSimplifier"]
-	path = Packages/UnityMeshSimplifier
-	url=https://github.com/Unity-Technologies/UnityMeshSimplifier

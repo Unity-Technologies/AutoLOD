@@ -1,0 +1,12 @@
+{
+    "name": "com.unity.auto-lod",
+    "displayName": "AutoLOD",
+    "version": "0.0.0",
+    "unity": "2019.2",
+    "unityRelease": "0f1",
+    "dependencies": {
+        "com.whinarn.unitymeshsimplifier": "2.3.3"
+    },
+    "description": "Unity experimental automatic LOD generation",
+    "keywords": [ "autolod", "lod", "simplification", "decimate" ]
+}
