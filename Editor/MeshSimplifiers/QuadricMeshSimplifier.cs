@@ -1,4 +1,6 @@
-﻿#if ENABLE_UNITYMESHSIMPLIFIER
+﻿// Enable by default
+#define ENABLE_UNITYMESHSIMPLIFIER
+#if ENABLE_UNITYMESHSIMPLIFIER
 using System;
 using UnityEditor;
 using UnityEngine;
