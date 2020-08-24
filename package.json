@@ -1,9 +1,9 @@
 {
-    "name": "com.amirebrahimi.auto-lod",
-    "displayName": "Unity AutoLOD",
-    "version": "1.0.0",
-    "unity": "2017.1",
-    "description": "Unity experimental automatic LOD generation",
+    "name": "com.unity.autolod",
+    "displayName": "AutoLOD",
+    "version": "0.0.1",
+    "unity": "2018.4",
+    "description": "Automatic LOD generation",
     "dependencies": {
         "com.whinarn.unitymeshsimplifier": "2.3.3"
     },
@@ -21,8 +21,7 @@
     ],
     "author": {
         "name": "Amir Ebrahimi",
-        "email": "github@aebrahimi.com",
-        "url": "http://amirebrahimi.com/"
+        "email": "amir@unity3d.com"
     },
     "bugs": "https://github.com/Unity-Technologies/AutoLOD/issues"
 }
