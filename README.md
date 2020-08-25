@@ -74,4 +74,4 @@ By making a pull request, you are confirming agreement to the terms and conditio
 <br>[Yuangguang Liao](https://github.com/liaoyg)
 
 ## Community Contributors
-[@Camarent](https://github.com/Camarent), [@LoneDev6](https://github.com/LoneDev6),[@marwie](https://github.com/marwie), [@msellens](https://github.com/msellens), [@redwyre](https://github.com/redwyre), 
+[@Camarent](https://github.com/Camarent), [@LoneDev6](https://github.com/LoneDev6), [@marwie](https://github.com/marwie), [@msellens](https://github.com/msellens), [@redwyre](https://github.com/redwyre)

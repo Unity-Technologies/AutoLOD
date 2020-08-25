@@ -16,5 +16,8 @@
         "reduction",
         "optimization"
     ],
+    "author": {
+        "name": "Unity"
+    },
     "bugs": "https://github.com/Unity-Technologies/AutoLOD/issues"
 }
