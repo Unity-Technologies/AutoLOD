@@ -48,7 +48,7 @@ Unity 2018.4 (LTS) or a later version is required
             "com.unity.ads": "2.0.8",
             "com.unity.analytics": "3.2.3",
             "com.unity.collab-proxy": "1.2.15",
-            ...
+            "...": "...",
         }
     }
     ```

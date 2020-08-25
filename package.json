@@ -16,9 +16,5 @@
         "reduction",
         "optimization"
     ],
-    "author": {
-        "name": "Amir Ebrahimi",
-        "email": "amir@unity3d.com"
-    },
     "bugs": "https://github.com/Unity-Technologies/AutoLOD/issues"
 }
