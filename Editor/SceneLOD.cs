@@ -49,10 +49,11 @@ namespace Unity.AutoLOD
                 if (hlodRoot)
                 {
                     var mf = hlodRoot.GetComponent<MeshFilter>();
-                    var sharedMesh= mf.sharedMesh;
-                    if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(sharedMesh)))
+                    if (mf)
                     {
-                        SaveUniqueHLODAsset(sharedMesh, scenePath);
+                        var sharedMesh = mf.sharedMesh;
+                        if (string.IsNullOrEmpty(AssetDatabase.GetAssetPath(sharedMesh)))
+                            SaveUniqueHLODAsset(sharedMesh, scenePath);
                     }
                 }
 
