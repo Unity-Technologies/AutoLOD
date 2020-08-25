@@ -29,21 +29,35 @@ Experimental means this:
 - [WorkingMesh](Scripts/Helpers/WorkingMesh.cs) - a thread-safe mesh (_and now job-friendly!_) struct
 
 ## Evaluating
-Unity 2018.1 or a later version is required
+Unity 2018.4 (LTS) or a later version is required
 
-### Git Dependencies
-- [git-lfs](https://git-lfs.github.com/)
-- [git-submodule](https://git-scm.com/docs/git-submodule)
+### Install via package manager
+- Using the UI
+  1. Follow the steps provided [here](https://docs.unity3d.com/Manual/upm-ui-giturl.html).
+  2. The Git URL to use is `https://github.com/Unity-Technologies/AutoLOD.git`
+- Manually through editing manifest.json
+  1. Read the instructions from the official documentation [here](https://docs.unity3d.com/Manual/upm-git.html).
+  2. Open up *manifest.json* inside the *Packages* directory in your Unity project using a text editor.
+  3. Under the dependencies section of this file, you should add the following line at the top:
+```"com.unity.autolod": "https://github.com/Unity-Technologies/AutoLOD.git",```
+  1. You should now see something like this:
+    ```json
+    {
+        "dependencies": {
+            "com.unity.autolod": "https://github.com/Unity-Technologies/AutoLOD.git",
+            "com.unity.ads": "2.0.8",
+            "com.unity.analytics": "3.2.3",
+            "com.unity.collab-proxy": "1.2.15",
+            "...": "...",
+        }
+    }
+    ```
+  
 
-### Cloning
+### Cloning locally to your project (requires [git-lfs](https://git-lfs.github.com/))
 1. Create a new Unity project or use an existing one
-2. From the command line change directory to your project's `Assets` directory.
-3. Run `git lfs clone --recursive https://github.com/Unity-Technologies/AutoLOD`
-
-### Updating
-Because this project uses [git-submodule](https://git-scm.com/docs/git-submodule), you'll need to execute `git submodule update` after pulling whenever a submodule is updated. You could execute this command always just to be safe or if you notice that a submodule is showing as modified after pulling changes.
-
-Optionally, you could add a [git hook for post-checkout](https://ttboj.wordpress.com/2014/05/06/keeping-git-submodules-in-sync-with-your-branches/) or use a GUI (e.g. SourceTree) that does this automatically for you.
+2. From the command line change directory to your project's `Packages` directory.
+3. Run `git lfs clone https://github.com/Unity-Technologies/AutoLOD`
 
 ### Project Settings
 If you plan on making changes to AutoLOD and/or contributing back, then you'll need to set the `Asset Serialization` property under Edit->Project Settings->Editor to `Force Text`.
@@ -58,3 +72,6 @@ By making a pull request, you are confirming agreement to the terms and conditio
 [Amir Ebrahimi](https://github.com/amirebrahimi/)
 <br>[Elliot Cuzzillo](https://github.com/ecuzzillo)
 <br>[Yuangguang Liao](https://github.com/liaoyg)
+
+## Community Contributors
+[@Camarent](https://github.com/Camarent), [@LoneDev6](https://github.com/LoneDev6), [@marwie](https://github.com/marwie), [@msellens](https://github.com/msellens), [@redwyre](https://github.com/redwyre)

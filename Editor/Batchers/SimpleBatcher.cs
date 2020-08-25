@@ -167,9 +167,7 @@ namespace Unity.AutoLOD
             }
 
             var combinedMesh = new Mesh();
-#if UNITY_2017_3_OR_NEWER
             combinedMesh.indexFormat = IndexFormat.UInt32;
-#endif
             combinedMesh.CombineMeshes(combine.ToArray(), true, true);
             combinedMesh.RecalculateBounds();
             var meshFilter = go.AddComponent<MeshFilter>();
