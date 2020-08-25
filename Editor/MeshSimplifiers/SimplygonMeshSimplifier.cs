@@ -16,10 +16,6 @@ using UnityEngine;
 using UnityObject = UnityEngine.Object;
 #endif
 
-#if UNITY_2017_3_OR_NEWER
-[assembly: Unity.AutoLOD.OptionalDependency("Simplygon.Unity.EditorPlugin.Window", "ENABLE_SIMPLYGON")]
-#endif
-
 #if ENABLE_SIMPLYGON
 namespace Unity.AutoLOD
 {

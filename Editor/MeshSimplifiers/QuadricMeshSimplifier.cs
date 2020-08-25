@@ -1,15 +1,9 @@
-﻿// Enable by default
-#define ENABLE_UNITYMESHSIMPLIFIER
-#if ENABLE_UNITYMESHSIMPLIFIER
+﻿#if ENABLE_UNITYMESHSIMPLIFIER
 using System;
 using UnityEditor;
 using UnityEngine;
 using UnityMeshSimplifier;
 using Mesh = Unity.AutoLOD.WorkingMesh;
-#endif
-
-#if UNITY_2017_3_OR_NEWER
-[assembly: Unity.AutoLOD.OptionalDependency("UnityMeshSimplifier.MeshSimplifier", "ENABLE_UNITYMESHSIMPLIFIER")]
 #endif
 
 #if ENABLE_UNITYMESHSIMPLIFIER

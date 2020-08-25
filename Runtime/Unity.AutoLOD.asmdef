@@ -1,5 +1,5 @@
 {
-    "name": "AutoLOD",
+    "name": "Unity.AutoLOD",
     "references": [],
     "optionalUnityReferences": [],
     "includePlatforms": [
@@ -12,5 +12,9 @@
         "WindowsStandalone64"
     ],
     "excludePlatforms": [],
-    "allowUnsafeCode": false
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
 }

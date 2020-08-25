@@ -10,10 +10,6 @@ using Unity.AutoLOD;
 using UnityObject = UnityEngine.Object;
 #endif
 
-#if UNITY_2017_3_OR_NEWER
-[assembly: Unity.AutoLOD.OptionalDependency("InstaLOD.InstaLODNative", "ENABLE_INSTALOD")]
-#endif
-
 #if ENABLE_INSTALOD
 namespace Unity.AutoLOD
 {

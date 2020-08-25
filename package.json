@@ -4,9 +4,6 @@
     "version": "0.0.1",
     "unity": "2018.4",
     "description": "Automatic LOD generation",
-    "dependencies": {
-        "com.whinarn.unitymeshsimplifier": "2.3.3"
-    },
     "keywords": [
         "autolod",
         "lod",

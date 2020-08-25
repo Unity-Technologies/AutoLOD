@@ -11,8 +11,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Threading;
 using Unity.AutoLOD.Utilities;
 using UnityEditor;
+using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityObject = UnityEngine.Object;
 
@@ -28,6 +31,7 @@ namespace Unity.AutoLOD
         const int k_DefaultMaxExecutionTime = 8;
         const string k_DefaultMeshSimplifier = "AutoLOD.DefaultMeshSimplifier";
         const string k_DefaultMeshSimplifierDefault = "QuadricMeshSimplifier";
+        const string k_DefaultMeshSimplifierDefine = "ENABLE_UNITYMESHSIMPLIFIER";
         const string k_DefaultBatcher = "AutoLOD.DefaultBatcher";
         const string k_MaxLOD = "AutoLOD.MaxLOD";
         const int k_DefaultMaxLOD = 2;
@@ -175,12 +179,91 @@ namespace Unity.AutoLOD
         static List<Type> s_Batchers;
         static IPreferences s_SimplifierPreferences;
 
+#if HAS_MINIMUM_REQUIRED_VERSION
+        static IEnumerator GetDefaultSimplifier()
+        {
+            var list = Client.List(true);
+            while (!list.IsCompleted)
+                yield return null;
+
+            PackageStatus status = PackageStatus.Unknown;
+            if (list.Status == StatusCode.Success)
+            {
+                foreach (var package in list.Result)
+                {
+                    if (package.name == "com.whinarn.unitymeshsimplifier")
+                    {
+                        status = package.status;
+                        break;
+                    }
+                }
+            }
+
+            if (status != PackageStatus.Available
+                && EditorUtility.DisplayDialog("Install Default Mesh Simplifier?",
+                    "You are missing a default mesh simplifier. Would you like to install one?",
+                    "Yes", "No"))
+            {
+                var request = Client.Add("https://github.com/Unity-Technologies/UnityMeshSimplifier.git");
+                while (!request.IsCompleted)
+                    yield return null;
+
+                switch (request.Status)
+                {
+                    case StatusCode.Success:
+                        status = PackageStatus.Available;
+                        break;
+                    case StatusCode.InProgress:
+                        status = PackageStatus.InProgress;
+                        break;
+                    case StatusCode.Failure:
+                        Debug.LogError($"AutoLOD: {request.Error.message}");
+                        break;
+                }
+            }
+
+            if (status == PackageStatus.Available)
+            {
+                // Cribbed from ConditionalCompilationUtility
+                // TODO: Remove when minimum version is 2019 LTS and use define constraints instead
+                var buildTargetGroup = EditorUserBuildSettings.selectedBuildTargetGroup;
+                if (buildTargetGroup == BuildTargetGroup.Unknown)
+                {
+                    var propertyInfo = typeof(EditorUserBuildSettings).GetProperty("activeBuildTargetGroup", 
+                        BindingFlags.Static | BindingFlags.NonPublic);
+                    if (propertyInfo != null)
+                        buildTargetGroup = (BuildTargetGroup)propertyInfo.GetValue(null, null);
+                }
+
+                var previousProjectDefines = PlayerSettings.GetScriptingDefineSymbolsForGroup(buildTargetGroup);
+                var projectDefines = previousProjectDefines.Split(';').ToList();
+                if (!projectDefines.Contains(k_DefaultMeshSimplifierDefine, StringComparer.OrdinalIgnoreCase))
+                {
+                    EditorApplication.LockReloadAssemblies();
+
+                    projectDefines.Add(k_DefaultMeshSimplifierDefine);
+
+                    // This will trigger another re-compile, which needs to happen, so all the custom attributes will be visible
+                    PlayerSettings.SetScriptingDefineSymbolsForGroup(buildTargetGroup, string.Join(";", projectDefines.ToArray()));
+
+                    // Let other systems execute before reloading assemblies
+                    yield return null;
+                    EditorApplication.UnlockReloadAssemblies();
+                }
+            }
+            if (status != PackageStatus.InProgress)
+            {
+                Debug.LogError("AutoLOD: You must set a valid Default Mesh Simplifier under Edit -> Preferences");
+            }            
+        }
+#endif        
+        
         static void UpdateDependencies()
         {
 #if HAS_MINIMUM_REQUIRED_VERSION
             if (meshSimplifierType == null)
             {
-                Debug.LogError("AutoLOD: You must set a valid Default Mesh Simplifier under Edit -> Preferences");
+                MonoBehaviourHelper.StartCoroutine(GetDefaultSimplifier());
                 ModelImporterLODGenerator.enabled = false;
                 return;
             }

@@ -15,10 +15,6 @@ using Vector4 = UnityEngine.Vector4;
 using WMesh = Unity.AutoLOD.WorkingMesh;
 #endif
 
-#if UNITY_2017_3_OR_NEWER
-[assembly: Unity.AutoLOD.OptionalDependency("MeshDecimator.MeshDecimation", "ENABLE_MESHDECIMATOR")]
-#endif
-
 #if ENABLE_MESHDECIMATOR
 namespace Unity.AutoLOD
 {
