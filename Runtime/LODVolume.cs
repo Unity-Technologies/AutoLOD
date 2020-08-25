@@ -647,9 +647,7 @@ public class LODVolume : MonoBehaviour
             }
 
             var sharedMesh = new Mesh();
-#if UNITY_2017_3_OR_NEWER
             sharedMesh.indexFormat = IndexFormat.UInt32;
-#endif
             sharedMesh.CombineMeshes(combine, true, true);
             sharedMesh.RecalculateBounds();
             var meshFilter = hlodRoot.AddComponent<MeshFilter>();
@@ -788,11 +786,7 @@ public class LODVolume : MonoBehaviour
             lodGroup.RecalculateBounds();
             lodGroup.ForceLOD(-1);
 
-#if UNITY_2018_2_OR_NEWER
             var prefab = PrefabUtility.GetCorrespondingObjectFromSource(go);
-#else
-            var prefab = PrefabUtility.GetPrefabParent(go);
-#endif
             if (prefab)
             {
                 var assetPath = AssetDatabase.GetAssetPath(prefab);

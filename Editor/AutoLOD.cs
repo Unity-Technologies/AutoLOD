@@ -1,9 +1,5 @@
-﻿#if UNITY_2018_1_OR_NEWER
+﻿#if UNITY_2018_4_OR_NEWER
 #define HAS_MINIMUM_REQUIRED_VERSION
-#endif
-
-#if UNITY_2018_3_OR_NEWER
-#pragma warning disable 0618 // TODO: Remove this when minimum version is 2018.3
 #endif
 
 using System;
@@ -12,7 +8,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 using Unity.AutoLOD.Utilities;
 using UnityEditor;
 using UnityEditor.PackageManager;
@@ -24,7 +19,7 @@ namespace Unity.AutoLOD
     [InitializeOnLoad]
     class AutoLOD
     {
-        const string k_MinimumRequiredVersion = "AutoLOD requires Unity 2018.1 or a later version";
+        const string k_MinimumRequiredVersion = "AutoLOD requires Unity 2018.4 or a later version";
 
         const HideFlags k_DefaultHideFlags = HideFlags.None;
         const string k_MaxExecutionTime = "AutoLOD.MaxExecutionTime";
@@ -426,8 +421,8 @@ namespace Unity.AutoLOD
             var selection = Selection.activeGameObject;
             if (selection)
             {
-                var prefabType = PrefabUtility.GetPrefabType(selection);
-                if (prefabType == PrefabType.ModelPrefab)
+                var prefabType = PrefabUtility.GetPrefabAssetType(selection);
+                if (prefabType == PrefabAssetType.Model)
                 {
                     var assetPath = AssetDatabase.GetAssetPath(selection);
 
@@ -444,7 +439,7 @@ namespace Unity.AutoLOD
 
                     AssetDatabase.ImportAsset(assetPath);
                 }
-                else if (prefabType == PrefabType.Prefab)
+                else if (prefabType == PrefabAssetType.Regular)
                 {
                     GenerateLODs(new MenuCommand(null));
                 }
@@ -455,8 +450,8 @@ namespace Unity.AutoLOD
         static bool CanForceGenerateLOD()
         {
             var selection = Selection.activeGameObject;
-            var prefabType = selection ? PrefabUtility.GetPrefabType(selection) : PrefabType.None;
-            return selection &&  prefabType == PrefabType.ModelPrefab || prefabType == PrefabType.Prefab;
+            var prefabType = selection ? PrefabUtility.GetPrefabAssetType(selection) : PrefabAssetType.NotAPrefab;
+            return selection && prefabType == PrefabAssetType.Model || prefabType == PrefabAssetType.Regular;
         }
 
 
@@ -532,11 +527,11 @@ namespace Unity.AutoLOD
                     if (EditorUtility.DisplayCancelableProgressBar("Prefabs", selection.name, i / (float)count))
                         break;
 
-                    if (selection && PrefabUtility.GetPrefabType(selection) == PrefabType.Prefab)
+                    if (selection && PrefabUtility.GetPrefabAssetType(selection) == PrefabAssetType.Regular)
                     {
                         var go = (GameObject)PrefabUtility.InstantiatePrefab(selection);
                         callback(go);
-                        PrefabUtility.ReplacePrefab(go, selection);
+                        PrefabUtility.SaveAsPrefabAsset(go, AssetDatabase.GetAssetPath(selection));
                         UnityObject.DestroyImmediate(go);
                     }
                     else
@@ -633,11 +628,7 @@ namespace Unity.AutoLOD
                 lodGroup.RecalculateBounds();
                 lodGroup.ForceLOD(-1);
 
-#if UNITY_2018_2_OR_NEWER
                 var prefab = PrefabUtility.GetCorrespondingObjectFromSource(go);
-#else
-                var prefab = PrefabUtility.GetPrefabParent(go);
-#endif
                 if (prefab)
                 {
                     var lodsAssetPath = GetLODAssetPath(prefab);
@@ -684,11 +675,7 @@ namespace Unity.AutoLOD
                     UnityObject.DestroyImmediate(mf.gameObject);
             }
 
-#if UNITY_2018_2_OR_NEWER
             var prefab = PrefabUtility.GetCorrespondingObjectFromSource(go);
-#else
-            var prefab = PrefabUtility.GetPrefabParent(go);
-#endif
             if (prefab)
             {
                 var lodAssetPath = GetLODAssetPath(prefab);

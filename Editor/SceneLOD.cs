@@ -108,7 +108,6 @@ namespace Unity.AutoLOD
 
         void OnEnable()
         {
-#if UNITY_2017_3_OR_NEWER
             if (LayerMask.NameToLayer(LODVolume.HLODLayer) == -1)
             {
                 var layers = TagManager.GetRequiredLayers();
@@ -128,7 +127,6 @@ namespace Unity.AutoLOD
                 AddCallbacks();
 
             ResetServiceCoroutineQueue();
-#endif
         }
 
         void OnDisable()
@@ -140,11 +138,7 @@ namespace Unity.AutoLOD
         void AddCallbacks()
         {
             EditorApplication.update += EditorUpdate;
-#if UNITY_2018_1_OR_NEWER
             EditorApplication.hierarchyChanged += OnHierarchyChanged;
-#else
-            EditorApplication.hierarchyWindowChanged += OnHierarchyChanged;
-#endif
             Selection.selectionChanged += OnSelectionChanged;
             Camera.onPreCull += PreCull;
 #if UNITY_2019_1_OR_NEWER
@@ -157,11 +151,7 @@ namespace Unity.AutoLOD
         void RemoveCallbacks()
         {
             EditorApplication.update -= EditorUpdate;
-#if UNITY_2018_1_OR_NEWER
             EditorApplication.hierarchyChanged -= OnHierarchyChanged;
-#else
-            EditorApplication.hierarchyWindowChanged -= OnHierarchyChanged;
-#endif
             Selection.selectionChanged -= OnSelectionChanged;
             Camera.onPreCull -= PreCull;
 #if UNITY_2019_1_OR_NEWER

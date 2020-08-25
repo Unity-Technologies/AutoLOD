@@ -18,13 +18,9 @@ namespace Unity.AutoLOD
             ProfilerDriver.ClearAllFrames();
 
             // Skip first frame stutter
-#if UNITY_2017_3_OR_NEWER
             ProfilerDriver.enabled = false;
-#endif
             yield return null;
-#if UNITY_2017_3_OR_NEWER
             ProfilerDriver.enabled = true;
-#endif
 
             if (showProfilerWindow)
             {
@@ -35,9 +31,7 @@ namespace Unity.AutoLOD
             while (playableDirector.playableGraph.IsValid() && playableDirector.playableGraph.IsPlaying())
                 yield return null;
 
-#if UNITY_2017_3_OR_NEWER
             ProfilerDriver.enabled = false;
-#endif
             EditorApplication.isPlaying = false;
         }
     }
