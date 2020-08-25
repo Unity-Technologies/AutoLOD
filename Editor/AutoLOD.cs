@@ -251,7 +251,7 @@ namespace Unity.AutoLOD
                     EditorApplication.UnlockReloadAssemblies();
                 }
             }
-            if (status != PackageStatus.InProgress)
+            else if (status != PackageStatus.InProgress)
             {
                 Debug.LogError("AutoLOD: You must set a valid Default Mesh Simplifier under Edit -> Preferences");
             }            
