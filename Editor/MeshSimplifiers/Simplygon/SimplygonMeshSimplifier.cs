@@ -1,25 +1,15 @@
-﻿
-using Unity.Collections;
-#if ENABLE_SIMPLYGON
+﻿#if ENABLE_SIMPLYGON
 using Simplygon;
 using Simplygon.Unity.EditorPlugin;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Threading;
-using Unity.AutoLOD;
 using UnityEditor;
 using UnityEngine;
 using Unity.Formats.USD;
 using USD.NET;
 using USD.NET.Unity;
-using UnityObject = UnityEngine.Object;
-#endif
 
-#if ENABLE_SIMPLYGON
 namespace Unity.AutoLOD
 {
     public struct SimplygonMeshSimplifier : IMeshSimplifier
@@ -28,94 +18,84 @@ namespace Unity.AutoLOD
         static pxr.TfToken s_SubMeshesToken = new pxr.TfToken("subMeshes");
 
         static object s_ExecutionLock = new object();
+        static ISimplygon s_Simplygon;
+        static int s_ReferenceCount;
 
         public void Simplify(WorkingMesh inputMesh, WorkingMesh outputMesh, float quality)
         {
-            var isMainThread = MonoBehaviourHelper.IsMainThread();
-
-            // lock (s_ExecutionLock)
+            // We can only have one instance of Simplygon, but we can use it from multiple threads once initialized
+            lock (s_ExecutionLock)
             {
-                MonoBehaviourHelper.ExecuteOnMainThread(() =>
+                if (s_Simplygon == null)
                 {
-                    using (ISimplygon simplygon = Loader.InitSimplygon(out var simplygonErrorCode, out var simplygonErrorMessage))
-                    {
-                        if (simplygonErrorCode == EErrorCodes.NoError)
-                        {
-                            string exportTempDirectory = SimplygonUtils.GetNewTempDirectory();
+                    s_Simplygon = Loader.InitSimplygon(out var simplygonErrorCode, out var simplygonErrorMessage);
+                    if (s_Simplygon == null && simplygonErrorCode != EErrorCodes.NoError)
+                        Debug.Log($"Initializing failed! {simplygonErrorCode}: {simplygonErrorMessage}");
+                }
 
-                            using (spScene sgScene = ExportSimplygonScene(simplygon, exportTempDirectory, inputMesh))
-                            {
-                                using (spReductionPipeline reductionPipeline = simplygon.CreateReductionPipeline())
-                                using (spReductionSettings reductionSettings = reductionPipeline.GetReductionSettings())
-                                {
-                                    reductionSettings.SetReductionTargets(EStopCondition.All, true, false, false, false);
-                                    reductionSettings.SetReductionTargetTriangleRatio(quality);
-
-                                    reductionPipeline.RunScene(sgScene, EPipelineRunMode.RunInThisProcess);
-
-                                    string baseFolder = "Assets/SimpleReductions";
-                                    if (!AssetDatabase.IsValidFolder(baseFolder))
-                                    {
-                                        AssetDatabase.CreateFolder("Assets", "SimpleReductions");
-                                    }
-
-                                    string meshName = inputMesh.name;
-                                    string assetFolderGuid = AssetDatabase.CreateFolder(baseFolder, meshName);
-                                    string assetFolderPath = AssetDatabase.GUIDToAssetPath(assetFolderGuid);
-
-                                    int startingLodIndex = 0;
-                                    List<GameObject> importedGameObjects = new List<GameObject>();
-                                    SimplygonImporter.Import(simplygon, reductionPipeline, ref startingLodIndex,
-                                        assetFolderPath, meshName, importedGameObjects);
-
-                                    Debug.Assert(importedGameObjects.Count == 1, "AutoLOD: There should only be one imported mesh.");
-                                    if (importedGameObjects.Count == 1)
-                                    {
-                                        GameObject go = importedGameObjects[0];
-                                        MeshFilter mf = go.GetComponentInChildren<MeshFilter>();
-                                        mf.sharedMesh.ApplyToWorkingMesh(ref outputMesh);
-                                    }
-
-                                    foreach (var go in importedGameObjects)
-                                    {
-                                        GameObject.DestroyImmediate(go);
-                                    }
-                                    AssetDatabase.DeleteAsset(assetFolderPath);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            Debug.Log($"Initializing failed! {simplygonErrorCode}: {simplygonErrorMessage}");
-                        }
-                    }
-                });
+                s_ReferenceCount++;
             }
 
-            // while (string.IsNullOrEmpty(job.AssetDirectory))
-            // {
-            //     if (!isMainThread)
-            //         Thread.Sleep(100);
-            // }
+            var simplygon = s_Simplygon;
+            if (simplygon != null)
+            {
+                string exportTempDirectory = SimplygonUtils.GetNewTempDirectory();
 
-            // MonoBehaviourHelper.ExecuteOnMainThread(() =>
-            // {
-            //     var customDataType = assembly.GetType("Simplygon.Cloud.Yoda.IntegrationClient.CloudJob+CustomData");
-            //     var pendingFolderNameProperty = customDataType.GetProperty("UnityPendingLODFolderName");
-            //     var jobCustomDataProperty = cloudJobType.GetProperty("JobCustomData");
-            //     var jobCustomData = jobCustomDataProperty.GetValue(job.CloudJob, null);
-            //     var jobFolderName = pendingFolderNameProperty.GetValue(jobCustomData, null) as string;
-            //
-            //     var lodAssetDir = "Assets/LODs/" + job.AssetDirectory;
-            //     var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(string.Format("{0}/{1}_LOD1.prefab", lodAssetDir, jobName));
-            //     MeshExtensions.ApplyToWorkingMesh(mesh, ref outputMesh);
-            //
-            //     //job.CloudJob.StateHandler.RequestJobDeletion();
-            //     AssetDatabaseEx.DeletePendingLODFolder(jobFolderName);
-            //     AssetDatabase.DeleteAsset(lodAssetDir);
-            //
-            //     UnityObject.DestroyImmediate(renderer.gameObject);
-            // });
+                using (spScene sgScene = ExportSimplygonScene(simplygon, exportTempDirectory, inputMesh))
+                {
+                    using (spReductionPipeline reductionPipeline = simplygon.CreateReductionPipeline())
+                    using (spReductionSettings reductionSettings = reductionPipeline.GetReductionSettings())
+                    {
+                        reductionSettings.SetReductionTargets(EStopCondition.All, true, false, false, false);
+                        reductionSettings.SetReductionTargetTriangleRatio(quality);
+
+                        reductionPipeline.RunScene(sgScene, EPipelineRunMode.RunInThisProcess);
+
+                        MonoBehaviourHelper.ExecuteOnMainThread(() =>
+                        {
+                            string baseFolder = "Assets/SimplygonTemp";
+                            if (!AssetDatabase.IsValidFolder(baseFolder))
+                                AssetDatabase.CreateFolder("Assets", "SimplygonTemp");
+
+                            string meshName = inputMesh.name;
+                            string assetFolderGuid = AssetDatabase.CreateFolder(baseFolder, meshName);
+                            string assetFolderPath = AssetDatabase.GUIDToAssetPath(assetFolderGuid);
+
+                            int startingLodIndex = 0;
+                            List<GameObject> importedGameObjects = new List<GameObject>();
+                            SimplygonImporter.Import(simplygon, reductionPipeline, ref startingLodIndex,
+                                assetFolderPath, meshName, importedGameObjects);
+
+                            Debug.Assert(importedGameObjects.Count == 1, "AutoLOD: There should only be one imported mesh.");
+                            if (importedGameObjects.Count == 1)
+                            {
+                                GameObject go = importedGameObjects[0];
+                                MeshFilter mf = go.GetComponentInChildren<MeshFilter>();
+                                mf.sharedMesh.ApplyToWorkingMesh(ref outputMesh);
+                            }
+
+                            foreach (var go in importedGameObjects)
+                            {
+                                GameObject.DestroyImmediate(go);
+                            }
+
+                            AssetDatabase.DeleteAsset(baseFolder);
+                        });
+                    }
+                }
+            }
+
+            lock (s_ExecutionLock)
+            {
+                s_ReferenceCount--;
+
+                // Clean up on our way out if we are the last thread using the Simplygon singleton
+                if (s_Simplygon != null && s_ReferenceCount == 0)
+                {
+                    s_Simplygon.Dispose();
+                    s_Simplygon = null;
+                }
+            }
         }
 
         static spScene ExportSimplygonScene(ISimplygon simplygon, string tempDirectory, WorkingMesh mesh)
