@@ -735,7 +735,7 @@ namespace Unity.AutoLOD
                     if (meshSimplifierType != null && typeof(IMeshSimplifier).IsAssignableFrom(meshSimplifierType))
                     {
                         if (s_SimplifierPreferences == null || s_SimplifierPreferences.GetType() != meshSimplifierType)
-                            s_SimplifierPreferences = (IPreferences)Activator.CreateInstance(meshSimplifierType);
+                            s_SimplifierPreferences = Activator.CreateInstance(meshSimplifierType) as IPreferences;
 
                         if (s_SimplifierPreferences != null)
                         {
