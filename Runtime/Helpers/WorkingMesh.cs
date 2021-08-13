@@ -361,18 +361,23 @@ namespace Unity.AutoLOD
 
         public string name
         {
-            get { return Encoding.UTF8.GetString(m_Name.ToArray()); }
+            get
+            {
+                var bytes = m_Name.Slice(0, m_NameLength).ToArray();
+                return Encoding.UTF8.GetString(bytes);
+            }
             set
             {
                 if (value == null)
                     value = string.Empty;
 
                 var bytes = Encoding.UTF8.GetBytes(value);
-                var length = Mathf.Min(bytes.Length, k_MaxNameSize);
-                m_Name.Slice(0, length).CopyFrom(bytes);
+                m_NameLength = Mathf.Min(bytes.Length, k_MaxNameSize);
+                m_Name.Slice(0, m_NameLength).CopyFrom(bytes);
             }
         }
         NativeArray<byte> m_Name;
+        int m_NameLength;
 
         // This data does not cross the job threshold, so if it needs to be read back, then it will need to be
         // in a NativeArray or some other type of NativeContainer
@@ -437,7 +442,7 @@ namespace Unity.AutoLOD
 
         public int[] GetTriangles(int submesh)
         {
-            if (submesh < m_SubmeshOffset.Length)
+            if (submesh < subMeshCount)
             {
                 var start = 0;
                 var stop = 0;
@@ -453,11 +458,11 @@ namespace Unity.AutoLOD
 
         void GetTriangleRange(int submesh, out int start, out int stop)
         {
-            if (submesh < m_SubmeshOffset.Length)
+            if (submesh < subMeshCount)
             {
                 start = m_SubmeshOffset[submesh];
                 stop = trianglesCount;
-                if (submesh < m_SubmeshOffset.Length - 1)
+                if (submesh < subMeshCount - 1)
                     stop = m_SubmeshOffset[submesh + 1];
 
                 return;

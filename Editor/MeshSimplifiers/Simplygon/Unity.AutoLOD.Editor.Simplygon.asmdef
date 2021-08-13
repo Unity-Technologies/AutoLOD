@@ -1,0 +1,19 @@
+{
+    "name": "Unity.AutoLOD.Editor.Simplygon",
+    "references": [
+        "Unity.AutoLOD.Editor",
+        "Unity.AutoLOD",
+        "Unity.Formats.USD.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

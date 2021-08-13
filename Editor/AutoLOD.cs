@@ -199,7 +199,7 @@ namespace Unity.AutoLOD
                     "You are missing a default mesh simplifier. Would you like to install one?",
                     "Yes", "No"))
             {
-                var request = Client.Add("https://github.com/Unity-Technologies/UnityMeshSimplifier.git");
+                var request = Client.Add("https://github.com/Whinarn/UnityMeshSimplifier.git");
                 while (!request.IsCompleted)
                     yield return null;
 
@@ -735,7 +735,7 @@ namespace Unity.AutoLOD
                     if (meshSimplifierType != null && typeof(IMeshSimplifier).IsAssignableFrom(meshSimplifierType))
                     {
                         if (s_SimplifierPreferences == null || s_SimplifierPreferences.GetType() != meshSimplifierType)
-                            s_SimplifierPreferences = (IPreferences)Activator.CreateInstance(meshSimplifierType);
+                            s_SimplifierPreferences = Activator.CreateInstance(meshSimplifierType) as IPreferences;
 
                         if (s_SimplifierPreferences != null)
                         {
