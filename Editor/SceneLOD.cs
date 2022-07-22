@@ -22,21 +22,26 @@ namespace Unity.AutoLOD
             {
                 foreach (string path in paths)
                 {
-                    if (path.Contains(".unity"))
+                    if (path.EndsWith(".unity"))
                     {
-                        AssetDatabase.StartAssetEditing();
-
                         var scene = SceneManager.GetSceneByPath(path);
                         if(!scene.IsValid()) continue;
-                        var rootGameObjects = scene.GetRootGameObjects();
-                        foreach (var go in rootGameObjects)
-                        {
-                            var lodVolume = go.GetComponent<LODVolume>();
-                            if (lodVolume)
-                                PersistHLODs(lodVolume, path);
-                        }
 
-                        AssetDatabase.StopAssetEditing();
+                        try
+                        {
+                            AssetDatabase.StartAssetEditing();
+                            var rootGameObjects = scene.GetRootGameObjects();
+                            foreach (var go in rootGameObjects)
+                            {
+                                var lodVolume = go.GetComponent<LODVolume>();
+                                if (lodVolume)
+                                    PersistHLODs(lodVolume, path);
+                            }
+                        }
+                        finally
+                        {
+                            AssetDatabase.StopAssetEditing();
+                        }
                     }
                 }
  
