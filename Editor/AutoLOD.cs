@@ -347,7 +347,7 @@ namespace Unity.AutoLOD
                 foreach (var p in prefabs)
                 {
                     var prefab = AssetDatabase.LoadMainAssetAtPath(AssetDatabase.GUIDToAssetPath(p));
-                    if (prefab && (predicate != null || predicate((GameObject)prefab)))
+                    if (prefab && (predicate == null || predicate((GameObject)prefab)))
                         gameObjects.Add(prefab);
                 }
                 Selection.objects = gameObjects.ToArray();
