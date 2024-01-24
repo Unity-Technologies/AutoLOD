@@ -104,7 +104,7 @@ namespace Unity.AutoLOD
                 EditorPrefs.SetBool(k_GenerateOnImport, value);
                 UpdateDependencies();
             }
-            get { return EditorPrefs.GetBool(k_GenerateOnImport, true); }
+            get { return EditorPrefs.GetBool(k_GenerateOnImport, false); }
         }
 
         static bool saveAssets
