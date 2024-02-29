@@ -181,20 +181,20 @@ namespace Unity.AutoLOD
             while (!list.IsCompleted)
                 yield return null;
 
-            PackageStatus status = PackageStatus.Unknown;
+            PackageSource status = PackageSource.Unknown;
             if (list.Status == StatusCode.Success)
             {
                 foreach (var package in list.Result)
                 {
                     if (package.name == "com.whinarn.unitymeshsimplifier")
                     {
-                        status = package.status;
+                        status = package.source;
                         break;
                     }
                 }
             }
 
-            if (status != PackageStatus.Available
+            if (status != PackageSource.Git
                 && EditorUtility.DisplayDialog("Install Default Mesh Simplifier?",
                     "You are missing a default mesh simplifier. Would you like to install one?",
                     "Yes", "No"))
@@ -206,10 +206,10 @@ namespace Unity.AutoLOD
                 switch (request.Status)
                 {
                     case StatusCode.Success:
-                        status = PackageStatus.Available;
+                        status = PackageSource.Git;
                         break;
                     case StatusCode.InProgress:
-                        status = PackageStatus.InProgress;
+                        status = PackageSource.Unknown;
                         break;
                     case StatusCode.Failure:
                         Debug.LogError($"AutoLOD: {request.Error.message}");
@@ -217,7 +217,7 @@ namespace Unity.AutoLOD
                 }
             }
 
-            if (status == PackageStatus.Available)
+            if (status == PackageSource.Git)
             {
                 // Cribbed from ConditionalCompilationUtility
                 // TODO: Remove when minimum version is 2019 LTS and use define constraints instead
@@ -246,7 +246,7 @@ namespace Unity.AutoLOD
                     EditorApplication.UnlockReloadAssemblies();
                 }
             }
-            else if (status != PackageStatus.InProgress)
+            else if (status != PackageSource.Unknown)
             {
                 Debug.LogError("AutoLOD: You must set a valid Default Mesh Simplifier under Edit -> Preferences");
             }            
