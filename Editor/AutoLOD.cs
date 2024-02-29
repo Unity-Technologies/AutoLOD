@@ -194,7 +194,7 @@ namespace Unity.AutoLOD
                 }
             }
 
-            if (status != PackageSource.Embedded
+            if (status != PackageSource.Git
                 && EditorUtility.DisplayDialog("Install Default Mesh Simplifier?",
                     "You are missing a default mesh simplifier. Would you like to install one?",
                     "Yes", "No"))
@@ -206,7 +206,7 @@ namespace Unity.AutoLOD
                 switch (request.Status)
                 {
                     case StatusCode.Success:
-                        status = PackageSource.Embedded;
+                        status = PackageSource.Git;
                         break;
                     case StatusCode.InProgress:
                         status = PackageSource.Unknown;
@@ -217,7 +217,7 @@ namespace Unity.AutoLOD
                 }
             }
 
-            if (status == PackageSource.Embedded)
+            if (status == PackageSource.Git)
             {
                 // Cribbed from ConditionalCompilationUtility
                 // TODO: Remove when minimum version is 2019 LTS and use define constraints instead
